@@ -16,8 +16,10 @@ the predictions written in README.md before the first run.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
+import signal
 import shutil
 import statistics
 import subprocess
@@ -131,16 +133,26 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
         cmd.append("--pure")
     cmd.append(task["prompt"])
 
+    # Never capture through a pipe: OpenCode leaves a server process holding the inherited
+    # stdout, so subprocess.run(capture_output=True, timeout=...) blocks past its own deadline
+    # (measured: two runs sat for ~54 minutes against a 300 s timeout). Redirect to a file and
+    # kill the whole process group instead.
     started = time.time()
     timed_out = False
-    try:
-        proc = subprocess.run(cmd, cwd=work, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout)
-        out = proc.stdout
-    except subprocess.TimeoutExpired as exc:
-        timed_out = True
-        raw = exc.stdout or b""
-        out = raw.decode(errors="ignore") if isinstance(raw, bytes) else raw
+    run_log = work / ".bench_run.log"
+    with run_log.open("w") as sink:
+        proc = subprocess.Popen(cmd, cwd=work, env=env, stdin=subprocess.DEVNULL,
+                                stdout=sink, stderr=subprocess.STDOUT, start_new_session=True)
+        try:
+            proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            with contextlib.suppress(ProcessLookupError, PermissionError):
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                proc.wait(timeout=30)
     wall = time.time() - started
+    out = run_log.read_text(errors="ignore")
 
     tokens, cost, steps, answer, errors = parse_events(out)
     answer_file = work / ".bench_answer.txt"
@@ -196,11 +208,20 @@ def mean(values: list[float]) -> float:
     return round(statistics.mean(values), 1) if values else 0.0
 
 
+def load_rows(path: str) -> tuple[list[dict], int]:
+    """Rows usable for comparison, plus how many were dropped as infrastructure failures."""
+    all_rows = [json.loads(l) for l in Path(path).read_text().splitlines() if l.strip()]
+    rows = [r for r in all_rows if not r.get("timed_out")]
+    return rows, len(all_rows) - len(rows)
+
+
 def cmd_summarize(args: argparse.Namespace) -> int:
-    rows = [json.loads(l) for l in Path(args.file).read_text().splitlines() if l.strip()]
+    rows, dropped = load_rows(args.file)
     if not rows:
         print("no rows")
         return 1
+    if dropped:
+        print(f"note: {dropped} timed-out run(s) excluded as infrastructure failures\n")
     conds = [c for c in CONDITIONS if any(r["condition"] == c for r in rows)]
     print(f"model: {sorted({r['model'] for r in rows})}  rows: {len(rows)}\n")
     print("| lane | condition | n | pass | input+cache | output | reasoning | cost $ | wall s |")
@@ -274,7 +295,9 @@ def cmd_decide(args: argparse.Namespace) -> int:
     first, then B (difference inside the 15% noise band), then A (a reduction beyond that band).
     A therefore means "clearly lower", not merely "lower".
     """
-    rows = [json.loads(l) for l in Path(args.file).read_text().splitlines() if l.strip()]
+    rows, dropped = load_rows(args.file)
+    if dropped:
+        print(f"note: {dropped} timed-out run(s) excluded as infrastructure failures\n")
     fast = [r for r in rows if r["lane_expected"] == "fast"]
     if not fast:
         print("no fast-lane rows")

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -111,6 +112,36 @@ class BenchTests(unittest.TestCase):
         self.assertIn("case B", decide(rows(100, 90)))            # inside the 15% band
         self.assertIn("case C", decide(rows(100, 50, low_pass=3)))  # cheaper but loses passes
         self.assertIn("case C*", decide(rows(100, 200)))          # worse, outside the sealed table
+
+    def test_a_hanging_runtime_is_killed_at_the_deadline(self):
+        """Regression: a grandchild holding stdout must not outlive the per-run timeout.
+
+        Measured before the fix: two runs sat for ~54 minutes against a 300 s deadline because
+        subprocess.run(capture_output=True, timeout=...) waits for the pipe to close.
+        """
+        fake = Path(tempfile.mkdtemp()) / "fake-opencode"
+        fake.write_text("#!/bin/sh\nsleep 120 &\nsleep 120\n")
+        fake.chmod(0o755)
+        original = RUN.OPENCODE
+        RUN.OPENCODE = str(fake)
+        try:
+            started = time.time()
+            row = RUN.run_one({"id": "F2", "lane": "fast", "prompt": "x"}, "none", "p/m", timeout=3)
+        finally:
+            RUN.OPENCODE = original
+        elapsed = time.time() - started
+        self.assertTrue(row["timed_out"])
+        self.assertFalse(row["pass"])
+        self.assertLess(elapsed, 60, f"deadline not enforced: {elapsed:.0f}s")
+
+    def test_timed_out_rows_are_excluded_from_comparisons(self):
+        work = Path(tempfile.mkdtemp())
+        path = work / "r.jsonl"
+        good = {"lane_expected": "fast", "condition": "enforce", "pass": True, "tokens": {"reasoning": 10}}
+        bad = {**good, "timed_out": True}
+        path.write_text("\n".join(json.dumps(r) for r in (good, bad, good)))
+        rows, dropped = RUN.load_rows(str(path))
+        self.assertEqual((len(rows), dropped), (2, 1))
 
     def test_config_content_targets_the_model(self):
         data = json.loads(RUN.config_content("opencode-go/gpt-5.6-luna", "high"))
