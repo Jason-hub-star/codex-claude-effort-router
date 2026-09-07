@@ -267,7 +267,8 @@ if want hermes; then
   install_tree "$ROOT/hermes/effort-lanes" "$HERMES_ROOT/plugins/effort-lanes"
   install_skills_into "$HERMES_ROOT/skills"
   if [[ -z "${EFFORT_LANES_HERMES_HOME:-}" ]] && command -v hermes >/dev/null; then
-    hermes plugins enable effort-lanes >/dev/null 2>&1 || NOTES+=("Run: hermes plugins enable effort-lanes")
+    # stdin closed: the enable command can prompt for capability grants and would otherwise hang
+    hermes plugins enable effort-lanes </dev/null >/dev/null 2>&1 || NOTES+=("Run: hermes plugins enable effort-lanes")
   else
     NOTES+=("Hermes: run 'hermes plugins enable effort-lanes' (or add a pre_llm_call shell hook; see README).")
   fi
