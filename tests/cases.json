@@ -1,34 +1,190 @@
 [
-  {"prompt":"List Python files","lane":"fast"},
-  {"prompt":"Count the failing tests","lane":"fast"},
-  {"prompt":"Find the current version","lane":"fast"},
-  {"prompt":"Fix this typo","lane":"deep"},
-  {"prompt":"파일 목록만 보여줘","lane":"fast"},
-  {"prompt":"정확한 파일명을 찾아","lane":"fast"},
-  {"prompt":"Review the authentication flow","lane":"daily"},
-  {"prompt":"Compare these two APIs","lane":"daily"},
-  {"prompt":"Summarize the docs","lane":"daily"},
-  {"prompt":"공식 문서를 조사해","lane":"daily"},
-  {"prompt":"현재 상태 확인","lane":"daily"},
-  {"prompt":"Explain why this is slow","lane":"daily"},
-  {"prompt":"Implement the endpoint and test it","lane":"deep"},
-  {"prompt":"Refactor this module","lane":"deep"},
-  {"prompt":"Find the root cause and fix it","lane":"deep"},
-  {"prompt":"Run end-to-end verification","lane":"deep"},
-  {"prompt":"버그를 고쳐서 검증해","lane":"deep"},
-  {"prompt":"자동화 스크립트를 만들어","lane":"deep"},
-  {"prompt":"Audit this security boundary","lane":"critical"},
-  {"prompt":"Deploy to production","lane":"critical"},
-  {"prompt":"Review the payment migration","lane":"critical"},
-  {"prompt":"실제 로봇 안전을 최종 판정해","lane":"critical"},
-  {"prompt":"This failed in two failed attempts","lane":"critical"},
-  {"prompt":"drop table after backup","lane":"critical"},
-  {"prompt":"lane=fast summarize the docs","lane":"fast"},
-  {"prompt":"effort-daily implement a report","lane":"daily"},
-  {"prompt":"모드deep 문서 비교","lane":"deep"},
-  {"prompt":"effort-fast audit security","lane":"critical"},
-  {"prompt":"hello","lane":"daily"},
-  {"prompt":"다음 작업 진행","lane":"daily"},
-  {"prompt":"format this JSON","lane":"fast"},
-  {"prompt":"investigate a vulnerability","lane":"critical"}
+  {
+    "prompt": "List Python files",
+    "lane": "fast"
+  },
+  {
+    "prompt": "Count the failing tests",
+    "lane": "fast"
+  },
+  {
+    "prompt": "Find the current version",
+    "lane": "fast"
+  },
+  {
+    "prompt": "Fix this typo",
+    "lane": "fast"
+  },
+  {
+    "prompt": "파일 목록만 보여줘",
+    "lane": "fast"
+  },
+  {
+    "prompt": "정확한 파일명을 찾아",
+    "lane": "fast"
+  },
+  {
+    "prompt": "Review the authentication flow",
+    "lane": "daily"
+  },
+  {
+    "prompt": "Compare these two APIs",
+    "lane": "daily"
+  },
+  {
+    "prompt": "Summarize the docs",
+    "lane": "daily"
+  },
+  {
+    "prompt": "공식 문서를 조사해",
+    "lane": "daily"
+  },
+  {
+    "prompt": "현재 상태 확인",
+    "lane": "daily"
+  },
+  {
+    "prompt": "Explain why this is slow",
+    "lane": "daily"
+  },
+  {
+    "prompt": "Implement the endpoint and test it",
+    "lane": "deep"
+  },
+  {
+    "prompt": "Refactor this module",
+    "lane": "deep"
+  },
+  {
+    "prompt": "Find the root cause and fix it",
+    "lane": "deep"
+  },
+  {
+    "prompt": "Run end-to-end verification",
+    "lane": "deep"
+  },
+  {
+    "prompt": "버그를 고쳐서 검증해",
+    "lane": "deep"
+  },
+  {
+    "prompt": "자동화 스크립트를 만들어",
+    "lane": "deep"
+  },
+  {
+    "prompt": "Audit this security boundary",
+    "lane": "critical"
+  },
+  {
+    "prompt": "Deploy to production",
+    "lane": "critical"
+  },
+  {
+    "prompt": "Review the payment migration",
+    "lane": "critical"
+  },
+  {
+    "prompt": "실제 로봇 안전을 최종 판정해",
+    "lane": "critical"
+  },
+  {
+    "prompt": "This failed in two failed attempts",
+    "lane": "critical"
+  },
+  {
+    "prompt": "drop table after backup",
+    "lane": "critical"
+  },
+  {
+    "prompt": "lane=fast summarize the docs",
+    "lane": "fast"
+  },
+  {
+    "prompt": "effort-daily implement a report",
+    "lane": "daily"
+  },
+  {
+    "prompt": "모드deep 문서 비교",
+    "lane": "deep"
+  },
+  {
+    "prompt": "effort-fast audit security",
+    "lane": "critical"
+  },
+  {
+    "prompt": "hello",
+    "lane": "daily"
+  },
+  {
+    "prompt": "다음 작업 진행",
+    "lane": "daily"
+  },
+  {
+    "prompt": "format this JSON",
+    "lane": "fast"
+  },
+  {
+    "prompt": "investigate a vulnerability",
+    "lane": "critical"
+  },
+  {
+    "prompt": "How many .py files are in this project (including tests)? Reply with the number only.",
+    "lane": "fast"
+  },
+  {
+    "prompt": "What is the version in pyproject.toml? Reply with the version only.",
+    "lane": "fast"
+  },
+  {
+    "prompt": "Fix the typo 'recieve' in README.md. Do nothing else.",
+    "lane": "fast"
+  },
+  {
+    "prompt": "List the names of the functions defined in todo/store.py, one per line, nothing else.",
+    "lane": "fast"
+  },
+  {
+    "prompt": "Which file defines the command-line entry point? Reply with the relative path only.",
+    "lane": "fast"
+  },
+  {
+    "prompt": "parse_due in todo/store.py returns the wrong date for 'tomorrow'. Fix it, add a test for it, and make sure the test suite passes (python3 -m unittest discover -s tests -t .).",
+    "lane": "deep"
+  },
+  {
+    "prompt": "Implement complete(task_id) in todo/store.py: mark that task done and persist it; raise KeyError for an unknown id. Add tests and run the suite.",
+    "lane": "deep"
+  },
+  {
+    "prompt": "add_task in todo/store.py silently accepts empty or whitespace-only titles. Make it raise ValueError, add a test, and run the suite.",
+    "lane": "deep"
+  },
+  {
+    "prompt": "todo/store.py duplicates the JSON load/save code in several functions. Refactor so reading and writing each happen in exactly one place, without changing behavior. Run the suite.",
+    "lane": "deep"
+  },
+  {
+    "prompt": "python -m todo.cli list crashes when tasks.json does not exist. Make it print 'no tasks' instead, add a test, and run the suite.",
+    "lane": "deep"
+  },
+  {
+    "prompt": "Security fix: todo/sync.py contains a hardcoded API key. Remove the secret from the code, read it from the TODO_API_KEY environment variable, and raise a clear error if it is missing. Add a test and run the suite.",
+    "lane": "critical"
+  },
+  {
+    "prompt": "Security fix: export_task in todo/store.py writes to a caller-supplied file name, which allows path traversal outside the export directory. Fix it so any name that escapes export_dir raises ValueError. Add a test and run the suite.",
+    "lane": "critical"
+  },
+  {
+    "prompt": "Security fix: search in todo/db.py builds SQL by string concatenation (SQL injection). Fix it with a parameterized query, add a test using an injection payload, and run the suite.",
+    "lane": "critical"
+  },
+  {
+    "prompt": "delete_all in todo/store.py is irreversible and has no guard. Require a keyword argument confirm=True (raise ValueError otherwise) and make the CLI delete-all pass it only when --yes is given. Add tests and run the suite.",
+    "lane": "critical"
+  },
+  {
+    "prompt": "Security fix: the task store file is created with default permissions. Make save_tasks create the file with mode 0600 (owner read/write only), add a test that checks the mode, and run the suite.",
+    "lane": "critical"
+  }
 ]

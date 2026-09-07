@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Benchmark (`bench/`): fixture with seeded defects, 15 tasks with hidden checks, four routing conditions, predictions before runs, offline `route` check. Pilot 1 results and two failed predictions recorded in `bench/results/pilot-1.md`.
+- Router: `EFFORT_LANES_CONFIG` relocates the global config; fast keywords `how many`, `which file`, `what is the`; deep keywords for bug reports and "add a test"; a short typo request is fast even when it says "fix". Matrix grew to 47 cases.
+
 ## 0.3.0 — 2026-09-08
 
 Repositioned from a Codex + Claude Code router to a cross-runtime harness; repository renamed to `effort-lanes`.

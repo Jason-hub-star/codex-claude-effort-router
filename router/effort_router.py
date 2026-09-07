@@ -73,10 +73,15 @@ KEYWORDS: dict[str, tuple[str, ...]] = {
         "조사", "검토", "분석", "설명", "비교", "요약", "문서", "상태 확인",
     ),
     "fast": (
-        "find", "list", "count", "version", "filename", "format", "typo", "찾아",
-        "목록", "개수", "버전", "파일명", "한 줄", "오탈자", "정렬", "조회",
+        "find", "list", "count", "how many", "which file", "what is the", "version", "filename",
+        "format", "typo", "찾아", "목록", "개수", "버전", "파일명", "한 줄", "오탈자", "정렬", "조회",
     ),
 }
+
+# A short prompt about a typo is a fast task even though "fix" is a deep signal.
+STRONG_FAST = ("typo", "오탈자")
+# Bug reports and "make it do X, add a test" requests are implementation work even without a deep verb.
+KEYWORDS["deep"] = KEYWORDS["deep"] + ("crashes", "add a test", "make it raise", "raise valueerror", "raise keyerror")
 
 GUIDANCE = (
     "The current parent model is unchanged; never claim it switched. "
@@ -174,6 +179,8 @@ def classify(prompt: str, cwd: str | None = None, config: dict[str, object] | No
         lane, reason = "critical", "safety, production, security, irreversible, or repeated-failure signal"
     elif explicit := _explicit_lane(text):
         lane, reason = explicit, "explicit lane request"
+    elif len(prompt.strip()) <= fast_max and _contains(text, STRONG_FAST):
+        lane, reason = "fast", "short exact or mechanical request"
     elif _contains(text, terms("deep")):
         lane, reason = "deep", "implementation or end-to-end verification signal"
     elif len(prompt.strip()) <= fast_max and _contains(text, terms("fast")):

@@ -222,6 +222,23 @@ def cmd_summarize(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_route(args: argparse.Namespace) -> int:
+    """Offline: does the router send each task prompt to its labeled lane? No model runs."""
+    tasks = json.loads((HERE / "tasks.json").read_text())
+    env = {**os.environ, "EFFORT_LANES_CONFIG": str(HERE / "results" / ".no-global-config.json")}
+    agree = 0
+    for task in tasks:
+        result = subprocess.run([sys.executable, str(HERE.parent / "router" / "effort_router.py"), "--classify",
+                                 "--prompt", task["prompt"], "--cwd", str(HERE / "fixtures" / "todo")],
+                                capture_output=True, text=True, env=env, check=True)
+        lane = json.loads(result.stdout)["lane"]
+        mark = "ok  " if lane == task["lane"] else "MISS"
+        agree += lane == task["lane"]
+        print(f"{mark} {task['id']:3} {task['lane']:8} -> {lane:8} {task['prompt'][:60]}")
+    print(f"agreement: {agree}/{len(tasks)}")
+    return 0 if agree == len(tasks) else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -233,6 +250,8 @@ def main() -> int:
     run.add_argument("--timeout", type=int, default=600)
     run.add_argument("--out", default="")
     run.set_defaults(func=cmd_run)
+    route = sub.add_parser("route", help="offline routing agreement for tasks.json")
+    route.set_defaults(func=cmd_route)
     summ = sub.add_parser("summarize")
     summ.add_argument("file")
     summ.set_defaults(func=cmd_summarize)

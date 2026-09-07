@@ -138,6 +138,27 @@ python3 router/effort_router.py --classify --json --runtime opencode --prompt "f
 
 The suite covers 32 English/Korean prompts, the hook contracts for both shell-hook shapes, malformed and hostile config, project floors, plugin contracts for OpenCode and OpenClaw under plain Node, the Hermes plugin, the installer across five runtime homes, and ten break tests for the docs gate. Live-runtime evidence and the failures kept on record are in [docs/evidence/VALIDATION.md](docs/evidence/VALIDATION.md).
 
+## Benchmark
+
+`bench/` measures the router the only way that means anything: same 15 tasks, same model, one axis changed — how effort is chosen. Four conditions (no router, always high, advisory, enforce), hidden pass/fail checks the agent never sees, predictions written down before the first run.
+
+Pilot 1 (2026-09-08, `opencode-go/gpt-5.6-luna`, one repeat, 60 runs):
+
+| Finding | Number |
+|---|---|
+| Critical tasks under `enforce` matched `always-high` on pass rate (5/5) at lower cost | 4% cheaper on that lane |
+| `enforce` versus no router: fixed the one critical miss | +13% cost on critical, +13% overall |
+| Fast tasks: the router **cost** reasoning tokens instead of saving them on this provider | 46 → 153 reasoning tokens |
+| Keyword tables missed short English prompts before the fix | 10/15 → 15/15 offline after |
+
+Two predictions failed and both changed the code or the roadmap; the table, the failures, and the next single-axis experiment are in [bench/results/pilot-1.md](bench/results/pilot-1.md).
+
+```bash
+python3 bench/run.py route                       # offline: does each task reach its labeled lane?
+python3 bench/run.py run --repeat 3              # 180 model runs
+python3 bench/run.py summarize bench/results/<file>.jsonl
+```
+
 ## Architecture
 
 ![Effort routing workflow](assets/effort-routing.svg)

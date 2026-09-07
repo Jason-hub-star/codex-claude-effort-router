@@ -32,6 +32,16 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 | Hermes | shell hook `hooks.pre_llm_call` → router, `hermes hooks test pre_llm_call` | exit 0 in 0.106 s; Hermes parsed `{"context": "[EFFORT LANES] lane=DAILY …"}` as its wire shape |
 | Codex | persisted threads with `-p effort-daily` / `-p effort-deep`; built-in `explorer` delegation | `gpt-5.6-terra/medium`, `gpt-5.6-sol/high`; `BUILTIN_EXPLORER_OK` (v0.1 evidence, unchanged) |
 
+## Benchmark pilot (2026-09-08)
+
+`bench/run.py`, `opencode-go/gpt-5.6-luna`, 15 tasks × 4 conditions, one repeat. Full table and interpretation in `bench/results/pilot-1.md`.
+
+| Prediction | Verdict |
+|---|---|
+| P1 fast lane saves reasoning under enforce vs always-high | FAIL — router added reasoning tokens on this provider (46 → 153) |
+| P2 critical pass rate does not drop under enforce | PASS — 5/5, matching always-high, 4% cheaper |
+| P3 ≥85% of tasks routed to the labeled lane | FAIL at 10/15; keyword fix and precedence rule brought the offline check to 15/15 and 47 matrix cases pass |
+
 ## Failures kept as evidence
 
 1. (v0.1) The first live large-task trial selected Critical and attempted a custom Codex agent that the running CLI reported unavailable; built-in fallback agents worked. Automatic hints now use built-in roles.
@@ -40,6 +50,8 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 4. (v0.3) A foreground `opencode run` produced no output for two minutes; the same command detached with `nohup` completed in 8 s. Cause not identified; recorded so the next person does not chase it.
 5. (v0.3) Loading the router with `importlib.util.spec_from_file_location` on Python 3.14 raised inside `@dataclass` until the module was placed in `sys.modules` first. The Hermes loader now does this; the unit tests already did.
 6. (v0.3) The docs gate, on its first run against this repository, failed on a real stray file in `docs/`. It was moved, not whitelisted.
+7. (bench) The first pilot was stopped at 4/60 because this machine's personal global config (default lane deep) leaked into the runs. The router gained `EFFORT_LANES_CONFIG` so the benchmark isolates itself; the 4 contaminated rows were discarded.
+8. (bench) Prediction P1 failed: on `gpt-5.6-luna` the fast lane's `reasoningEffort=medium` and the injected guidance both cost more reasoning than the provider default. Recorded as a hypothesis for the next single-axis run, not patched on the same data.
 
 ## What this does not prove
 
