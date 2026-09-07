@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 CONFIG_NAME = ".effort-lanes.json"
-GLOBAL_CONFIG = Path.home() / ".config" / "effort-lanes" / "config.json"
+GLOBAL_CONFIG = Path(os.environ.get("EFFORT_LANES_CONFIG") or (Path.home() / ".config" / "effort-lanes" / "config.json"))
 LANE_ORDER = ("fast", "daily", "deep", "critical")
 RUNTIMES = ("hook", "codex", "claude", "opencode", "openclaw", "hermes", "generic")
 

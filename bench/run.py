@@ -94,6 +94,9 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
     env.update(spec.get("env", {}))
     debug = work / ".bench_lanes.jsonl"
     env["EFFORT_LANES_DEBUG"] = str(debug)
+    # isolate the router from this machine's personal config and test the repository's router, not an installed copy
+    env["EFFORT_LANES_CONFIG"] = str(work / ".no-global-config.json")
+    env["EFFORT_LANES_ROUTER"] = str(HERE.parent / "router" / "effort_router.py")
     if spec.get("effort"):
         env["OPENCODE_CONFIG_CONTENT"] = config_content(model, spec["effort"])
     cmd = [OPENCODE, "run", "--format", "json", "-m", model, "--dir", str(work), "--title", f"bench {task['id']} {cond}"]

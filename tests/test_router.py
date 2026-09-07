@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -114,6 +115,14 @@ class RouterTests(unittest.TestCase):
         self.write_config({"default_lane": "deep"})
         self.assertEqual(self.classify("ㄱ").lane, "deep")
         self.assertEqual(self.classify("zzimplement it").lane, "deep", "global keywords survive the merge")
+
+    def test_env_can_relocate_the_global_config(self):
+        alt = Path(self.tmp.name) / "alt.json"
+        alt.write_text(json.dumps({"default_lane": "critical"}))
+        env = {**os.environ, "EFFORT_LANES_CONFIG": str(alt)}
+        result = subprocess.run([sys.executable, str(ROUTER), "--classify", "--prompt", "ㄱ", "--cwd", str(self.project)],
+                                text=True, capture_output=True, check=True, env=env)
+        self.assertEqual(json.loads(result.stdout)["lane"], "critical")
 
     def test_cli_json_for_plugins(self):
         result = subprocess.run(
