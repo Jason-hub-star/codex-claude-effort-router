@@ -1,11 +1,25 @@
 # Changelog
 
+## 0.3.0 — 2026-09-08
+
+Repositioned from a Codex + Claude Code router to a cross-runtime harness; repository renamed to `effort-lanes`.
+
+- Router: project config `.effort-lanes.json` (walk-up discovery) merged over `~/.config/effort-lanes/config.json`; `floor`, `default_lane`, keyword extensions, per-lane per-runtime targets, `fast_max_chars`. `--json --runtime <name>` output for plugins. Hermes `pre_llm_call` shell-hook shape supported next to `UserPromptSubmit`. Context tag is now `[EFFORT LANES]` and includes `effort=`.
+- OpenCode plugin (`opencode/effort-lanes.js`): injects the routing context as a synthetic part; opt-in `reasoningEffort` enforcement via `chat.params`. Live-verified: the model echoed `LANE=FAST EFFORT=MEDIUM`.
+- OpenClaw plugin (`openclaw/`): `before_prompt_build` context, opt-in `before_model_resolve` provider/model override. `openclaw plugins doctor` clean; hook fired in a live local turn.
+- Hermes plugin (`hermes/effort-lanes/`): `pre_llm_call` context injection; `hermes plugins doctor` passes; shell-hook route verified with `hermes hooks test`.
+- Skills: `decision-sheet` (file-round-trip variant of grill-me, credited), `absorb`, `harness-audit` with a session-log recovery-rate script and the 18-skill cap. Skill folders are now installed whole.
+- Docs gate (`scaffold/scripts/check-docs.sh`) with ten break tests, and `install.sh --scaffold` for the docs layout. This repository's own `docs/` was restructured to pass it.
+- Installer: `--runtimes`, auto-detection of five runtimes, shared router at `~/.config/effort-lanes/`, `--scaffold`, env overrides `EFFORT_LANES_*_HOME` (legacy `EFFORT_ROUTER_*` still accepted).
+- Distribution: Claude Code plugin manifest and marketplace (`.claude-plugin/`, `hooks/hooks.json`), npm-ready `opencode/package.json`, OpenClaw `openclaw.plugin.json`.
+- Fixed: loading the router via `importlib` on Python 3.14 failed inside `@dataclass` unless the module was registered in `sys.modules` (Hermes plugin loader).
+
 ## 0.2.0 — 2026-09-07
 
 - Added seven optional, runtime-neutral workflow skills distilled from repeated `아침`, `조준`, `수렴`, `골`, `페이즈루프`, and `감사` habits.
 - Added core-only, selective (`--skills`), full starter (`--starter`), and read-only listing (`--list-skills`) installation modes.
 - Added installer regression coverage for both Codex and Claude Code skill locations.
-- Added a dual-theme Archify starter-workflow diagram; promotional media remains unchanged pending final evaluation.
+- Added a dual-theme Archify starter-workflow diagram and refreshed the Remotion promo.
 - Reframed the README for beginners, trend explorers, and experienced harness remixers.
 
 ## 0.1.0 — 2026-09-07

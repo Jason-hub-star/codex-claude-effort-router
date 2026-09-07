@@ -4,26 +4,38 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP_ROOT="$(mktemp -d)"
 trap 'rm -rf "$TMP_ROOT"' EXIT
+LANES_HOME="$TMP_ROOT/lanes"
 CODEX_ROOT="$TMP_ROOT/codex"
 CLAUDE_ROOT="$TMP_ROOT/claude"
+OPENCODE_ROOT="$TMP_ROOT/opencode"
+OPENCLAW_ROOT="$TMP_ROOT/openclaw"
+HERMES_ROOT="$TMP_ROOT/hermes"
 mkdir -p "$CODEX_ROOT" "$CLAUDE_ROOT"
+ALL="codex,claude,opencode,openclaw,hermes"
 
 router_command="python3 \"$CODEX_ROOT/hooks/effort-router.py\""
 jq -nc --arg command "$router_command" '{hooks:{UserPromptSubmit:[{hooks:[{type:"command",command:"keep-me",timeout:9},{type:"wrong",command:$command,timeout:99}]}]}}' > "$CODEX_ROOT/hooks.json"
 printf '{"hooks":{}}\n' > "$CLAUDE_ROOT/settings.json"
 
-run_install() {
-  EFFORT_ROUTER_CODEX_HOME="$CODEX_ROOT" EFFORT_ROUTER_CLAUDE_HOME="$CLAUDE_ROOT" bash "$ROOT/install.sh" "$@" >/dev/null
+with_homes() {
+  EFFORT_LANES_HOME="$LANES_HOME" EFFORT_LANES_CODEX_HOME="$CODEX_ROOT" EFFORT_LANES_CLAUDE_HOME="$CLAUDE_ROOT" \
+  EFFORT_LANES_OPENCODE_HOME="$OPENCODE_ROOT" EFFORT_LANES_OPENCLAW_HOME="$OPENCLAW_ROOT" EFFORT_LANES_HERMES_HOME="$HERMES_ROOT" "$@"
 }
+run_install() { with_homes bash "$ROOT/install.sh" --runtimes "$ALL" "$@" >/dev/null; }
 
 bash "$ROOT/install.sh" --help | grep -q '^Usage:'
-DRY_CODEX="$TMP_ROOT/dry run/codex"
-DRY_CLAUDE="$TMP_ROOT/dry run/claude"
-EFFORT_ROUTER_CODEX_HOME="$DRY_CODEX" EFFORT_ROUTER_CLAUDE_HOME="$DRY_CLAUDE" bash "$ROOT/install.sh" --dry-run --starter | grep -q '^Workflow skills:'
-[[ ! -e "$DRY_CODEX" ]]
-[[ ! -e "$DRY_CLAUDE" ]]
+DRY="$TMP_ROOT/dry run"
+EFFORT_LANES_HOME="$DRY/lanes" EFFORT_LANES_CODEX_HOME="$DRY/codex" EFFORT_LANES_CLAUDE_HOME="$DRY/claude" \
+  bash "$ROOT/install.sh" --runtimes codex,claude --dry-run --starter | grep -q '^Workflow skills:'
+[[ ! -e "$DRY" ]]
 
+# core install for every runtime, twice, must converge
 run_install
+[[ -f "$LANES_HOME/effort_router.py" ]]
+[[ -f "$LANES_HOME/config.example.json" ]]
+[[ -f "$OPENCODE_ROOT/plugins/effort-lanes.js" ]]
+[[ -f "$OPENCLAW_ROOT/extensions/effort-lanes/openclaw.plugin.json" ]]
+[[ -f "$HERMES_ROOT/plugins/effort-lanes/plugin.yaml" ]]
 [[ ! -d "$CODEX_ROOT/skills" ]]
 [[ ! -d "$CLAUDE_ROOT/skills" ]]
 first_hash="$(shasum -a 256 "$CODEX_ROOT/hooks.json" "$CLAUDE_ROOT/settings.json")"
@@ -35,29 +47,41 @@ jq -e --arg command "$router_command" '
   ([.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2 and .additionalContextLimit == 1200)] | length == 1)
   and any(.hooks.UserPromptSubmit[]?.hooks[]?; .command == "keep-me")
 ' "$CODEX_ROOT/hooks.json" >/dev/null
-
 claude_command="python3 \"$CLAUDE_ROOT/hooks/effort-router.py\""
 jq -e --arg command "$claude_command" '
   [.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2)] | length == 1
 ' "$CLAUDE_ROOT/settings.json" >/dev/null
-
 [[ -f "$CODEX_ROOT/hooks.json.effort-router.bak" ]]
 [[ -f "$CLAUDE_ROOT/settings.json.effort-router.bak" ]]
 printf 'null' | python3 "$CODEX_ROOT/hooks/effort-router.py" >/dev/null
 
+# the installed plugins find the shared router without any env var
+EFFORT_LANES_ROUTER="$LANES_HOME/effort_router.py" node -e "
+import('$OPENCODE_ROOT/plugins/effort-lanes.js').then(async (m) => {
+  const h = await m.EffortLanesPlugin({ directory: '$TMP_ROOT' });
+  const out = { message: { id: 'm' }, parts: [{ type: 'text', text: 'count files' }] };
+  await h['chat.message']({ sessionID: 's' }, out);
+  if (out.parts.length !== 2 || !/lane=FAST/.test(out.parts[1].text)) { console.error(out); process.exit(1); }
+});"
+
+# skills
 skills_list="$(bash "$ROOT/install.sh" --list-skills)"
-[[ "$(printf '%s\n' "$skills_list" | wc -l | tr -d ' ')" == "7" ]]
+[[ "$(printf '%s\n' "$skills_list" | wc -l | tr -d ' ')" == "10" ]]
 grep -qx 'agent-starter' <<< "$skills_list"
-grep -qx 'phase-loop' <<< "$skills_list"
+grep -qx 'decision-sheet' <<< "$skills_list"
 
 mkdir -p "$CODEX_ROOT/skills/aim-before-build" "$CLAUDE_ROOT/skills/aim-before-build"
 printf 'previous codex skill\n' > "$CODEX_ROOT/skills/aim-before-build/SKILL.md"
 printf 'previous claude skill\n' > "$CLAUDE_ROOT/skills/aim-before-build/SKILL.md"
-run_install --skills 'aim-before-build, goal-contract'
-for skill in aim-before-build goal-contract; do
+run_install --skills 'aim-before-build, harness-audit'
+for skill in aim-before-build harness-audit; do
   [[ -f "$CODEX_ROOT/skills/$skill/SKILL.md" ]]
   [[ -f "$CLAUDE_ROOT/skills/$skill/SKILL.md" ]]
+  [[ -f "$HERMES_ROOT/skills/$skill/SKILL.md" ]]
+  [[ -f "$OPENCLAW_ROOT/skills/$skill/SKILL.md" ]]
 done
+[[ -f "$CLAUDE_ROOT/skills/harness-audit/scripts/audit.py" ]]   # whole skill tree, not only SKILL.md
+[[ ! -d "$OPENCODE_ROOT/skills" ]]                                 # OpenCode reads ~/.claude/skills
 grep -qx 'previous codex skill' "$CODEX_ROOT/skills/aim-before-build/SKILL.md.effort-router.bak"
 grep -qx 'previous claude skill' "$CLAUDE_ROOT/skills/aim-before-build/SKILL.md.effort-router.bak"
 [[ ! -e "$CODEX_ROOT/skills/phase-loop/SKILL.md" ]]
@@ -69,41 +93,47 @@ for skill in $skills_list; do
 done
 starter_hash="$(find "$CODEX_ROOT/skills" "$CLAUDE_ROOT/skills" -type f -name SKILL.md -exec shasum -a 256 {} + | sort)"
 run_install --starter
-starter_second_hash="$(find "$CODEX_ROOT/skills" "$CLAUDE_ROOT/skills" -type f -name SKILL.md -exec shasum -a 256 {} + | sort)"
-[[ "$starter_hash" == "$starter_second_hash" ]]
+[[ "$starter_hash" == "$(find "$CODEX_ROOT/skills" "$CLAUDE_ROOT/skills" -type f -name SKILL.md -exec shasum -a 256 {} + | sort)" ]]
 
-dedupe_output="$(EFFORT_ROUTER_CODEX_HOME="$CODEX_ROOT" EFFORT_ROUTER_CLAUDE_HOME="$CLAUDE_ROOT" bash "$ROOT/install.sh" --skills aim-before-build,aim-before-build)"
+dedupe_output="$(with_homes bash "$ROOT/install.sh" --runtimes claude --skills aim-before-build,aim-before-build)"
 grep -q 'and 1 starter skill(s)' <<< "$dedupe_output"
 
-if run_install --skills not-a-skill 2>/dev/null; then
-  echo "Expected an unknown skill to fail" >&2
-  exit 1
-fi
-if run_install --skills aim-before-build, 2>/dev/null; then
-  echo "Expected an empty skill name to fail" >&2
-  exit 1
-fi
+# scaffold never overwrites
+PROJ="$TMP_ROOT/proj"
+mkdir -p "$PROJ/docs"
+printf '# mine\n' > "$PROJ/docs/INDEX.md"
+printf '# readme\n' > "$PROJ/README.md"
+with_homes bash "$ROOT/install.sh" --runtimes claude --scaffold "$PROJ" >/dev/null
+grep -qx '# mine' "$PROJ/docs/INDEX.md"
+[[ -f "$PROJ/docs/status/DOC-SYNC-MATRIX.md" && -f "$PROJ/scripts/check-docs.sh" && -d "$PROJ/docs/research" ]]
+bash "$PROJ/scripts/check-docs.sh" "$PROJ" >/dev/null
+
+# failures happen before any write
+if run_install --skills not-a-skill 2>/dev/null; then echo "Expected an unknown skill to fail" >&2; exit 1; fi
+if run_install --skills aim-before-build, 2>/dev/null; then echo "Expected an empty skill name to fail" >&2; exit 1; fi
+if run_install --runtimes cursor 2>/dev/null; then echo "Expected an unknown runtime to fail" >&2; exit 1; fi
 
 BROKEN_ROOT="$TMP_ROOT/broken"
 mkdir -p "$BROKEN_ROOT/codex"
 printf '{broken' > "$BROKEN_ROOT/codex/hooks.json"
-if EFFORT_ROUTER_CODEX_HOME="$BROKEN_ROOT/codex" EFFORT_ROUTER_CLAUDE_HOME="$BROKEN_ROOT/claude" bash "$ROOT/install.sh" --starter >/dev/null 2>&1; then
-  echo "Expected malformed settings to fail" >&2
-  exit 1
+if EFFORT_LANES_HOME="$BROKEN_ROOT/lanes" EFFORT_LANES_CODEX_HOME="$BROKEN_ROOT/codex" EFFORT_LANES_CLAUDE_HOME="$BROKEN_ROOT/claude" \
+   bash "$ROOT/install.sh" --runtimes codex,claude --starter >/dev/null 2>&1; then
+  echo "Expected malformed settings to fail" >&2; exit 1
 fi
 [[ "$(find "$BROKEN_ROOT" -type f | wc -l | tr -d ' ')" == "1" ]]
 
 HALF_ROOT="$TMP_ROOT/half"
 mkdir -p "$HALF_ROOT/codex"
 printf 'not-a-directory\n' > "$HALF_ROOT/claude"
-if EFFORT_ROUTER_CODEX_HOME="$HALF_ROOT/codex" EFFORT_ROUTER_CLAUDE_HOME="$HALF_ROOT/claude" bash "$ROOT/install.sh" --starter >/dev/null 2>&1; then
-  echo "Expected a non-directory runtime home to fail" >&2
-  exit 1
+if EFFORT_LANES_HOME="$HALF_ROOT/lanes" EFFORT_LANES_CODEX_HOME="$HALF_ROOT/codex" EFFORT_LANES_CLAUDE_HOME="$HALF_ROOT/claude" \
+   bash "$ROOT/install.sh" --runtimes codex,claude --starter >/dev/null 2>&1; then
+  echo "Expected a non-directory runtime home to fail" >&2; exit 1
 fi
 [[ -z "$(find "$HALF_ROOT/codex" -mindepth 1 -print -quit)" ]]
 
 SPACE_ROOT="$TMP_ROOT/path with spaces"
-EFFORT_ROUTER_CODEX_HOME="$SPACE_ROOT/codex home" EFFORT_ROUTER_CLAUDE_HOME="$SPACE_ROOT/claude home" bash "$ROOT/install.sh" --skills morning-brief >/dev/null
+EFFORT_LANES_HOME="$SPACE_ROOT/lanes" EFFORT_LANES_CODEX_HOME="$SPACE_ROOT/codex home" EFFORT_LANES_CLAUDE_HOME="$SPACE_ROOT/claude home" \
+  bash "$ROOT/install.sh" --runtimes codex,claude --skills morning-brief >/dev/null
 [[ -f "$SPACE_ROOT/codex home/skills/morning-brief/SKILL.md" ]]
 [[ -f "$SPACE_ROOT/claude home/skills/morning-brief/SKILL.md" ]]
 
@@ -111,9 +141,8 @@ NO_JQ_BIN="$TMP_ROOT/no-jq-bin"
 mkdir -p "$NO_JQ_BIN"
 ln -s "$(command -v dirname)" "$NO_JQ_BIN/dirname"
 ln -s "$(command -v python3)" "$NO_JQ_BIN/python3"
-if PATH="$NO_JQ_BIN" /bin/bash "$ROOT/install.sh" --dry-run > /dev/null 2> "$TMP_ROOT/no-jq.err"; then
-  echo "Expected missing jq to fail" >&2
-  exit 1
+if PATH="$NO_JQ_BIN" /bin/bash "$ROOT/install.sh" --runtimes claude --dry-run > /dev/null 2> "$TMP_ROOT/no-jq.err"; then
+  echo "Expected missing jq to fail" >&2; exit 1
 fi
 grep -q 'ERROR: jq is required' "$TMP_ROOT/no-jq.err"
 
@@ -121,10 +150,9 @@ NO_PYTHON_BIN="$TMP_ROOT/no-python-bin"
 mkdir -p "$NO_PYTHON_BIN"
 ln -s "$(command -v dirname)" "$NO_PYTHON_BIN/dirname"
 ln -s "$(command -v jq)" "$NO_PYTHON_BIN/jq"
-if PATH="$NO_PYTHON_BIN" /bin/bash "$ROOT/install.sh" --dry-run > /dev/null 2> "$TMP_ROOT/no-python.err"; then
-  echo "Expected missing python3 to fail" >&2
-  exit 1
+if PATH="$NO_PYTHON_BIN" /bin/bash "$ROOT/install.sh" --runtimes claude --dry-run > /dev/null 2> "$TMP_ROOT/no-python.err"; then
+  echo "Expected missing python3 to fail" >&2; exit 1
 fi
 grep -q 'ERROR: python3 is required' "$TMP_ROOT/no-python.err"
 
-echo "Installer test OK: help/dry-run, preflight, paths with spaces, dependencies, selective/starter skills, idempotent, fail-open"
+echo "Installer test OK: five runtimes, shared router, plugin resolution, skill trees, scaffold, preflight, idempotent, fail-open"

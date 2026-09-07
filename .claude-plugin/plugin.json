@@ -1,0 +1,12 @@
+{
+  "name": "effort-lanes",
+  "description": "Routes every prompt into fast/daily/deep/critical effort lanes with a deterministic, fail-open hook, and ships ten portable workflow skills.",
+  "version": "0.3.0",
+  "author": { "name": "Jason-hub-star", "url": "https://github.com/Jason-hub-star" },
+  "homepage": "https://github.com/Jason-hub-star/effort-lanes",
+  "repository": "https://github.com/Jason-hub-star/effort-lanes",
+  "license": "MIT",
+  "keywords": ["effort", "routing", "hooks", "skills", "codex", "opencode", "openclaw", "hermes"],
+  "agents": "./claude/agents/",
+  "hooks": "./hooks/hooks.json"
+}

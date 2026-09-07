@@ -1,0 +1,11 @@
+{
+  "name": "effort-lanes",
+  "version": "0.3.0",
+  "description": "Effort Lanes plugin for OpenClaw: per-prompt effort routing with optional model enforcement.",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT",
+  "openclaw": {
+    "extensions": ["./index.js"]
+  }
+}

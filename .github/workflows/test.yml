@@ -12,5 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Test router and installer
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test router, plugins, installer, docs gate
         run: bash scripts/check.sh

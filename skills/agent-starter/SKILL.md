@@ -1,6 +1,6 @@
 ---
 name: agent-starter
-description: Guide people who are new to coding agents through the next appropriate workflow stage, or help experienced users select and remix the included morning, aim, converge, goal, phase-loop, and audit skills. Use for “what should I do next?”, “help me start with agents”, “에이전트 처음”, or “뭐부터 하지?”.
+description: Guide people who are new to coding agents through the next appropriate workflow stage, or help experienced users select and remix the included morning, aim, decision-sheet, converge, goal, phase-loop, audit, absorb, and harness-audit skills. Use for “what should I do next?”, “help me start with agents”, “에이전트 처음”, or “뭐부터 하지?”.
 ---
 
 # Agent Starter
@@ -11,10 +11,12 @@ Choose one next stage. Do not run the whole chain by default.
 
 1. Beginning a work session with existing repository history → `morning-brief`.
 2. A desired outcome exists, but current implementation status is unclear → `aim-before-build`.
-3. A costly or hard-to-reverse plan is still uncertain → `converge-plan`.
-4. Work needs multiple turns and an evidence-based finish line → `goal-contract`.
-5. An approved plan has three or more implementation phases → `phase-loop`.
-6. Work is ready to review or share → `evidence-audit`.
+3. The target is still fuzzy and several decisions are open → `decision-sheet`.
+4. A costly or hard-to-reverse plan is still uncertain → `converge-plan`.
+5. Work needs multiple turns and an evidence-based finish line → `goal-contract`.
+6. An approved plan has three or more implementation phases → `phase-loop`.
+7. Work is ready to review or share → `evidence-audit`.
+8. Too many skills, or a skill never triggers → `harness-audit`; an external source to evaluate → `absorb`.
 
 Simple questions and one-line edits need none of these. Handle them directly.
 
@@ -31,3 +33,7 @@ Simple questions and one-line edits need none of these. Handle them directly.
 ## Output
 
 Return the selected stage, why it fits, the first artifact or check to inspect, and one next action.
+
+## Next
+
+Hand off to the selected stage and stop; the chain continues from that stage's own `## Next`.

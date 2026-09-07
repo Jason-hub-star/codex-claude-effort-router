@@ -1,0 +1,17 @@
+{
+  "$comment": "Copy to ~/.config/effort-lanes/config.json (global) or <project>/.effort-lanes.json (project). Every key is optional; malformed files are ignored.",
+  "default_lane": "daily",
+  "floor": null,
+  "fast_max_chars": 140,
+  "keywords": {
+    "critical": ["movej", "joint motion"],
+    "deep": ["migrate the schema"],
+    "daily": [],
+    "fast": []
+  },
+  "lanes": {
+    "critical": { "opencode": "anthropic/claude-opus-5", "openclaw": "anthropic/claude-opus-5" },
+    "fast": { "opencode": "opencode-go/deepseek-v4-flash" }
+  },
+  "enforce": { "opencode": false }
+}

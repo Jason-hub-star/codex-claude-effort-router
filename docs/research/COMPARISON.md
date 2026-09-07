@@ -35,3 +35,16 @@ The first review found the closest small routers. A second review compared the i
 | [Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin#install) | 24,930 | Native instructions across many agent hosts | Separate portable skills from runtime-specific hooks |
 
 Stars are GitHub API snapshots, not quality scores. Full findings and local failure tests are in [INSTALL-UX-RESEARCH.ko.md](INSTALL-UX-RESEARCH.ko.md).
+
+## Repositioning — 2026-09-08 (v0.3)
+
+The "small shared policy, not one more harness" decision above was reversed deliberately after measuring where a prompt hook can actually change effort:
+
+| Runtime | Can a hook change model/effort per prompt? | Seam |
+|---|---|---|
+| OpenCode | yes | `chat.params` options (`reasoningEffort`) |
+| OpenClaw | yes | `before_model_resolve` → `modelOverride` / `providerOverride` |
+| Hermes Agent | no (issues #23739, #7273 open) | `pre_llm_call` context only |
+| Codex, Claude Code | no | `UserPromptSubmit` context only |
+
+That asymmetry is the differentiator none of the compared projects have: one policy file, five runtimes, enforced where possible and honest where not. The widening also folds in the docs gate, the sync matrix, and the harness-audit recovery-rate measurement, because the adoption benchmark above showed the winning projects ship a workflow, not only a hook. What did not change: the classifier stays one dependency-free file, routing never calls an LLM, enforcement is opt-in, and every capability claim carries a recorded run in `docs/evidence/VALIDATION.md`.

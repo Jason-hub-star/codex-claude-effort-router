@@ -2,54 +2,68 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CODEX_ROOT="${EFFORT_ROUTER_CODEX_HOME:-$HOME/.codex}"
-CLAUDE_ROOT="${EFFORT_ROUTER_CLAUDE_HOME:-$HOME/.claude}"
+LANES_HOME="${EFFORT_LANES_HOME:-$HOME/.config/effort-lanes}"
+CODEX_ROOT="${EFFORT_LANES_CODEX_HOME:-${EFFORT_ROUTER_CODEX_HOME:-$HOME/.codex}}"
+CLAUDE_ROOT="${EFFORT_LANES_CLAUDE_HOME:-${EFFORT_ROUTER_CLAUDE_HOME:-$HOME/.claude}}"
+OPENCODE_ROOT="${EFFORT_LANES_OPENCODE_HOME:-$HOME/.config/opencode}"
+OPENCLAW_ROOT="${EFFORT_LANES_OPENCLAW_HOME:-$HOME/.openclaw}"
+HERMES_ROOT="${EFFORT_LANES_HERMES_HOME:-$HOME/.hermes}"
+ALL_RUNTIMES=(codex claude opencode openclaw hermes)
 AVAILABLE_SKILLS=(
+  absorb
   agent-starter
   aim-before-build
   converge-plan
+  decision-sheet
   evidence-audit
   goal-contract
+  harness-audit
   morning-brief
   phase-loop
 )
 SELECTED_SKILLS=()
 HAS_SELECTED_SKILLS=0
+SELECTED_RUNTIMES=()
+HAS_SELECTED_RUNTIMES=0
 DRY_RUN=0
+SCAFFOLD_DIR=""
+DO_SCAFFOLD=0
 
 usage() {
   cat <<'USAGE'
 Usage: bash install.sh [options]
 
-Install the effort router for both Codex and Claude Code.
+Install effort lanes for Codex, Claude Code, OpenCode, OpenClaw, and Hermes Agent.
 
 Options:
-  --starter          Also install all seven workflow skills
+  --runtimes LIST    Comma-separated subset of: codex,claude,opencode,openclaw,hermes
+                     (default: every runtime detected on this machine)
+  --starter          Also install all workflow skills
   --skills LIST      Install comma-separated skills; spaces after commas are OK
   --list-skills      Print available skill names without changing files
+  --scaffold [DIR]   Copy the docs layout and docs gate into DIR (default: current
+                     directory); existing files are never overwritten
   --dry-run          Validate inputs and print destinations without changing files
   -h, --help         Show this help
 
 Examples:
   bash install.sh
-  bash install.sh --starter
-  bash install.sh --skills morning-brief,evidence-audit
+  bash install.sh --runtimes claude,opencode --starter
+  bash install.sh --skills decision-sheet,evidence-audit
+  bash install.sh --scaffold ~/code/my-project
   bash install.sh --starter --dry-run
 
 Existing files receive one-time .effort-router.bak backups. Restart active
-Codex and Claude Code sessions after installation.
+sessions after installation. Enforcement (OpenCode, OpenClaw) stays off until
+you enable it; see README.
 USAGE
 }
 
-list_skills() {
-  printf '%s\n' "${AVAILABLE_SKILLS[@]}"
-}
+list_skills() { printf '%s\n' "${AVAILABLE_SKILLS[@]}"; }
 
-skill_exists() {
-  local wanted="$1" skill
-  for skill in "${AVAILABLE_SKILLS[@]}"; do
-    [[ "$skill" == "$wanted" ]] && return 0
-  done
+in_list() {
+  local wanted="$1" item; shift
+  for item in "$@"; do [[ "$item" == "$wanted" ]] && return 0; done
   return 1
 }
 
@@ -61,99 +75,118 @@ trim() {
 }
 
 add_skill() {
-  local wanted="$1" selected
-  if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then
-    for selected in "${SELECTED_SKILLS[@]}"; do
-      [[ "$selected" == "$wanted" ]] && return 0
-    done
-  fi
-  SELECTED_SKILLS+=("$wanted")
-  HAS_SELECTED_SKILLS=1
+  local wanted="$1"
+  if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]] && in_list "$wanted" "${SELECTED_SKILLS[@]}"; then return 0; fi
+  SELECTED_SKILLS+=("$wanted"); HAS_SELECTED_SKILLS=1
+}
+
+add_runtime() {
+  local wanted="$1"
+  if [[ "$HAS_SELECTED_RUNTIMES" -eq 1 ]] && in_list "$wanted" "${SELECTED_RUNTIMES[@]}"; then return 0; fi
+  SELECTED_RUNTIMES+=("$wanted"); HAS_SELECTED_RUNTIMES=1
+}
+
+split_list() {
+  local raw="$2" item
+  [[ -n "$raw" ]] || { echo "ERROR: $1 requires a comma-separated list" >&2; exit 1; }
+  [[ "$raw" != ,* && "$raw" != *, && "$raw" != *,,* ]] || { echo "ERROR: $1 contains an empty name" >&2; exit 1; }
+  IFS=',' read -r -a __items <<< "$raw"
+  for item in "${__items[@]}"; do printf '%s\n' "$(trim "$item")"; done
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    --list-skills)
-      list_skills
-      exit 0
-      ;;
-    --starter)
-      SELECTED_SKILLS=("${AVAILABLE_SKILLS[@]}")
-      HAS_SELECTED_SKILLS=1
-      shift
-      ;;
+    -h|--help) usage; exit 0 ;;
+    --list-skills) list_skills; exit 0 ;;
+    --starter) SELECTED_SKILLS=("${AVAILABLE_SKILLS[@]}"); HAS_SELECTED_SKILLS=1; shift ;;
     --skills)
-      [[ $# -ge 2 && -n "$2" ]] || { echo "ERROR: --skills requires a comma-separated list" >&2; exit 1; }
-      [[ "$2" != ,* && "$2" != *, && "$2" != *,,* ]] || { echo "ERROR: --skills contains an empty name" >&2; exit 1; }
-      IFS=',' read -r -a requested_skills <<< "$2"
-      for requested_skill in "${requested_skills[@]}"; do
-        add_skill "$(trim "$requested_skill")"
-      done
-      shift 2
-      ;;
-    --dry-run)
-      DRY_RUN=1
-      shift
-      ;;
-    *)
-      echo "ERROR: unknown argument: $1" >&2
-      exit 1
-      ;;
+      [[ $# -ge 2 ]] || { echo "ERROR: --skills requires a comma-separated list" >&2; exit 1; }
+      parsed="$(split_list --skills "$2")"
+      while IFS= read -r s; do add_skill "$s"; done <<< "$parsed"
+      shift 2 ;;
+    --runtimes)
+      [[ $# -ge 2 ]] || { echo "ERROR: --runtimes requires a comma-separated list" >&2; exit 1; }
+      parsed="$(split_list --runtimes "$2")"
+      while IFS= read -r r; do add_runtime "$r"; done <<< "$parsed"
+      shift 2 ;;
+    --scaffold)
+      DO_SCAFFOLD=1
+      if [[ $# -ge 2 && "$2" != -* ]]; then SCAFFOLD_DIR="$2"; shift 2; else SCAFFOLD_DIR="$PWD"; shift; fi ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    *) echo "ERROR: unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
+# --- validation -------------------------------------------------------------------------
+
 if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then
   for skill in "${SELECTED_SKILLS[@]}"; do
-    skill_exists "$skill" || { echo "ERROR: unknown skill: $skill" >&2; exit 1; }
+    in_list "$skill" "${AVAILABLE_SKILLS[@]}" || { echo "ERROR: unknown skill: $skill" >&2; exit 1; }
+    [[ -f "$ROOT/skills/$skill/SKILL.md" ]] || { echo "ERROR: missing skill source: $skill" >&2; exit 1; }
   done
 fi
+if [[ "$HAS_SELECTED_RUNTIMES" -eq 1 ]]; then
+  for rt in "${SELECTED_RUNTIMES[@]}"; do
+    in_list "$rt" "${ALL_RUNTIMES[@]}" || { echo "ERROR: unknown runtime: $rt (choose from ${ALL_RUNTIMES[*]})" >&2; exit 1; }
+  done
+else
+  [[ -d "$CODEX_ROOT" || -n "$(command -v codex 2>/dev/null)" ]] && add_runtime codex
+  [[ -d "$CLAUDE_ROOT" || -n "$(command -v claude 2>/dev/null)" ]] && add_runtime claude
+  [[ -d "$OPENCODE_ROOT" || -n "$(command -v opencode 2>/dev/null)" ]] && add_runtime opencode
+  [[ -n "$(command -v openclaw 2>/dev/null)" ]] && add_runtime openclaw
+  [[ -d "$HERMES_ROOT" || -n "$(command -v hermes 2>/dev/null)" ]] && add_runtime hermes
+  [[ "$HAS_SELECTED_RUNTIMES" -eq 1 ]] || { echo "ERROR: no supported runtime detected; pass --runtimes" >&2; exit 1; }
+fi
 
-command -v jq >/dev/null || { echo "ERROR: jq is required" >&2; exit 1; }
+want() { [[ "$HAS_SELECTED_RUNTIMES" -eq 1 ]] && in_list "$1" "${SELECTED_RUNTIMES[@]}"; }
+
 command -v python3 >/dev/null || { echo "ERROR: python3 is required" >&2; exit 1; }
+if want codex || want claude; then
+  command -v jq >/dev/null || { echo "ERROR: jq is required" >&2; exit 1; }
+fi
 
-for source in \
-  "$ROOT/router/effort_router.py" \
-  "$ROOT"/codex/agents/*.toml \
-  "$ROOT"/codex/profiles/*.config.toml \
-  "$ROOT"/claude/agents/*.md; do
-  [[ -f "$source" ]] || { echo "ERROR: missing installer source: $source" >&2; exit 1; }
+for home in "$LANES_HOME" "$CODEX_ROOT" "$CLAUDE_ROOT" "$OPENCODE_ROOT" "$HERMES_ROOT"; do
+  [[ ! -e "$home" || -d "$home" ]] || { echo "ERROR: runtime home is not a directory: $home" >&2; exit 1; }
 done
-[[ ! -e "$CODEX_ROOT" || -d "$CODEX_ROOT" ]] || { echo "ERROR: Codex home is not a directory: $CODEX_ROOT" >&2; exit 1; }
-[[ ! -e "$CLAUDE_ROOT" || -d "$CLAUDE_ROOT" ]] || { echo "ERROR: Claude home is not a directory: $CLAUDE_ROOT" >&2; exit 1; }
 for settings in "$CODEX_ROOT/hooks.json" "$CLAUDE_ROOT/settings.json"; do
   if [[ -e "$settings" ]]; then
     [[ -f "$settings" ]] || { echo "ERROR: settings path is not a file: $settings" >&2; exit 1; }
     jq -e . "$settings" >/dev/null || { echo "ERROR: invalid JSON settings: $settings" >&2; exit 1; }
   fi
 done
-if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then
-  for skill in "${SELECTED_SKILLS[@]}"; do
-    [[ -f "$ROOT/skills/$skill/SKILL.md" ]] || { echo "ERROR: missing skill source: $skill" >&2; exit 1; }
-  done
+if [[ "$DO_SCAFFOLD" -eq 1 ]]; then
+  [[ ! -e "$SCAFFOLD_DIR" || -d "$SCAFFOLD_DIR" ]] || { echo "ERROR: scaffold target is not a directory: $SCAFFOLD_DIR" >&2; exit 1; }
 fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "Dry run OK. Codex target: $CODEX_ROOT"
-  echo "Dry run OK. Claude target: $CLAUDE_ROOT"
-  if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then
-    echo "Workflow skills: ${SELECTED_SKILLS[*]}"
-  else
-    echo "Workflow skills: none (core-only)"
-  fi
+  echo "Dry run OK. Shared router: $LANES_HOME/effort_router.py"
+  echo "Runtimes: ${SELECTED_RUNTIMES[*]}"
+  want codex && echo "Dry run OK. Codex target: $CODEX_ROOT"
+  want claude && echo "Dry run OK. Claude target: $CLAUDE_ROOT"
+  want opencode && echo "Dry run OK. OpenCode target: $OPENCODE_ROOT/plugins/effort-lanes.js"
+  want openclaw && echo "Dry run OK. OpenClaw target: openclaw plugins install $ROOT/openclaw"
+  want hermes && echo "Dry run OK. Hermes target: $HERMES_ROOT/plugins/effort-lanes"
+  if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then echo "Workflow skills: ${SELECTED_SKILLS[*]}"; else echo "Workflow skills: none (core-only)"; fi
+  [[ "$DO_SCAFFOLD" -eq 1 ]] && echo "Scaffold target: $SCAFFOLD_DIR"
   exit 0
 fi
+
+# --- helpers ----------------------------------------------------------------------------
 
 install_file() {
   local source="$1" target="$2"
   mkdir -p "$(dirname "$target")"
-  if [[ -e "$target" && ! -e "$target.effort-router.bak" ]]; then
-    cp -p "$target" "$target.effort-router.bak"
-  fi
+  if [[ -e "$target" && ! -e "$target.effort-router.bak" ]]; then cp -p "$target" "$target.effort-router.bak"; fi
   cp "$source" "$target"
+}
+
+install_tree() {
+  # copy every file under $1 into $2, one-time backup per existing file
+  local source="$1" target="$2" file rel
+  while IFS= read -r -d '' file; do
+    rel="${file#"$source"/}"
+    install_file "$file" "$target/$rel"
+  done < <(find "$source" -type f -print0)
 }
 
 merge_hook() {
@@ -162,13 +195,11 @@ merge_hook() {
   [[ -e "$settings" ]] || printf '{"hooks":{}}\n' > "$settings"
   jq -e . "$settings" >/dev/null
   [[ -e "$settings.effort-router.bak" ]] || cp -p "$settings" "$settings.effort-router.bak"
-
   if [[ "$platform" == "codex" ]]; then
     handler="$(jq -nc --arg command "$command" '{type:"command",command:$command,timeout:2,statusMessage:"Routing task effort",additionalContextLimit:1200}')"
   else
     handler="$(jq -nc --arg command "$command" '{type:"command",command:$command,timeout:2,statusMessage:"Routing task effort"}')"
   fi
-
   temp="$(mktemp "$(dirname "$settings")/.effort-router.XXXXXX")"
   jq --arg command "$command" --argjson handler "$handler" '
     .hooks = (.hooks // {})
@@ -184,27 +215,78 @@ merge_hook() {
   mv "$temp" "$settings"
 }
 
-install_file "$ROOT/router/effort_router.py" "$CODEX_ROOT/hooks/effort-router.py"
-for source in "$ROOT"/codex/agents/*.toml; do
-  install_file "$source" "$CODEX_ROOT/agents/$(basename "$source")"
-done
-for source in "$ROOT"/codex/profiles/*.config.toml; do
-  install_file "$source" "$CODEX_ROOT/$(basename "$source")"
-done
-merge_hook "$CODEX_ROOT/hooks.json" "python3 \"$CODEX_ROOT/hooks/effort-router.py\"" codex
+install_skills_into() {
+  local base="$1" skill
+  [[ "$HAS_SELECTED_SKILLS" -eq 1 ]] || return 0
+  for skill in "${SELECTED_SKILLS[@]}"; do install_tree "$ROOT/skills/$skill" "$base/$skill"; done
+}
 
-install_file "$ROOT/router/effort_router.py" "$CLAUDE_ROOT/hooks/effort-router.py"
-for source in "$ROOT"/claude/agents/*.md; do
-  install_file "$source" "$CLAUDE_ROOT/agents/$(basename "$source")"
-done
-merge_hook "$CLAUDE_ROOT/settings.json" "python3 \"$CLAUDE_ROOT/hooks/effort-router.py\"" claude
+# --- install ----------------------------------------------------------------------------
 
-if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then
-  for skill in "${SELECTED_SKILLS[@]}"; do
-    install_file "$ROOT/skills/$skill/SKILL.md" "$CODEX_ROOT/skills/$skill/SKILL.md"
-    install_file "$ROOT/skills/$skill/SKILL.md" "$CLAUDE_ROOT/skills/$skill/SKILL.md"
-  done
-  echo "Installed effort router and ${#SELECTED_SKILLS[@]} starter skill(s) for Codex and Claude Code. Restart active sessions to load them."
-else
-  echo "Installed effort router for Codex and Claude Code. Restart active sessions to load new custom agents."
+NOTES=()
+install_file "$ROOT/router/effort_router.py" "$LANES_HOME/effort_router.py"
+[[ -e "$LANES_HOME/config.example.json" ]] || cp "$ROOT/router/config.example.json" "$LANES_HOME/config.example.json"
+
+if want codex; then
+  install_file "$ROOT/router/effort_router.py" "$CODEX_ROOT/hooks/effort-router.py"
+  for source in "$ROOT"/codex/agents/*.toml; do install_file "$source" "$CODEX_ROOT/agents/$(basename "$source")"; done
+  for source in "$ROOT"/codex/profiles/*.config.toml; do install_file "$source" "$CODEX_ROOT/$(basename "$source")"; done
+  merge_hook "$CODEX_ROOT/hooks.json" "python3 \"$CODEX_ROOT/hooks/effort-router.py\"" codex
+  install_skills_into "$CODEX_ROOT/skills"
 fi
+
+if want claude; then
+  install_file "$ROOT/router/effort_router.py" "$CLAUDE_ROOT/hooks/effort-router.py"
+  for source in "$ROOT"/claude/agents/*.md; do install_file "$source" "$CLAUDE_ROOT/agents/$(basename "$source")"; done
+  merge_hook "$CLAUDE_ROOT/settings.json" "python3 \"$CLAUDE_ROOT/hooks/effort-router.py\"" claude
+  install_skills_into "$CLAUDE_ROOT/skills"
+fi
+
+if want opencode; then
+  install_file "$ROOT/opencode/effort-lanes.js" "$OPENCODE_ROOT/plugins/effort-lanes.js"
+  if want claude; then
+    NOTES+=("OpenCode reads skills from ~/.claude/skills, so no separate OpenCode skill copy was made.")
+  else
+    install_skills_into "$OPENCODE_ROOT/skills"
+  fi
+fi
+
+if want openclaw; then
+  if [[ -n "${EFFORT_LANES_OPENCLAW_HOME:-}" ]]; then
+    install_tree "$ROOT/openclaw" "$OPENCLAW_ROOT/extensions/effort-lanes"
+  elif command -v openclaw >/dev/null; then
+    openclaw plugins install "$ROOT/openclaw" >/dev/null 2>&1 || NOTES+=("OpenClaw plugin install failed; run: openclaw plugins install $ROOT/openclaw")
+    NOTES+=("OpenClaw: restart the gateway, and add \"effort-lanes\" to plugins.allow to silence the trust warning.")
+  else
+    NOTES+=("OpenClaw CLI not found; skipped. Install it, then run: openclaw plugins install $ROOT/openclaw")
+  fi
+  install_skills_into "$OPENCLAW_ROOT/skills"
+fi
+
+if want hermes; then
+  install_tree "$ROOT/hermes/effort-lanes" "$HERMES_ROOT/plugins/effort-lanes"
+  install_skills_into "$HERMES_ROOT/skills"
+  if [[ -z "${EFFORT_LANES_HERMES_HOME:-}" ]] && command -v hermes >/dev/null; then
+    hermes plugins enable effort-lanes >/dev/null 2>&1 || NOTES+=("Run: hermes plugins enable effort-lanes")
+  else
+    NOTES+=("Hermes: run 'hermes plugins enable effort-lanes' (or add a pre_llm_call shell hook; see README).")
+  fi
+fi
+
+if [[ "$DO_SCAFFOLD" -eq 1 ]]; then
+  copied=0
+  while IFS= read -r -d '' file; do
+    rel="${file#"$ROOT/scaffold"/}"
+    [[ "$(basename "$file")" == ".gitkeep" ]] && { mkdir -p "$SCAFFOLD_DIR/$(dirname "$rel")"; continue; }
+    if [[ -e "$SCAFFOLD_DIR/$rel" ]]; then continue; fi
+    mkdir -p "$SCAFFOLD_DIR/$(dirname "$rel")"
+    cp "$file" "$SCAFFOLD_DIR/$rel"
+    copied=$((copied + 1))
+  done < <(find "$ROOT/scaffold" -type f -print0)
+  echo "Scaffolded $copied file(s) into $SCAFFOLD_DIR (existing files untouched). Gate: bash scripts/check-docs.sh"
+fi
+
+skill_note="core only"
+[[ "$HAS_SELECTED_SKILLS" -eq 1 ]] && skill_note="and ${#SELECTED_SKILLS[@]} starter skill(s)"
+echo "Installed effort lanes for: ${SELECTED_RUNTIMES[*]} ($skill_note). Restart active sessions."
+if [[ ${#NOTES[@]} -gt 0 ]]; then printf '  note: %s\n' "${NOTES[@]}"; fi

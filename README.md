@@ -1,121 +1,142 @@
-# Codex + Claude Effort Router
+# Effort Lanes
 
-[![test](https://github.com/Jason-hub-star/codex-claude-effort-router/actions/workflows/test.yml/badge.svg)](https://github.com/Jason-hub-star/codex-claude-effort-router/actions/workflows/test.yml)
+[![test](https://github.com/Jason-hub-star/effort-lanes/actions/workflows/test.yml/badge.svg)](https://github.com/Jason-hub-star/effort-lanes/actions/workflows/test.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-7C3AED.svg)](LICENSE)
-[![stdlib only](https://img.shields.io/badge/router-stdlib%20only-10B981.svg)](router/effort_router.py)
+[![router: stdlib only](https://img.shields.io/badge/router-stdlib%20only-10B981.svg)](router/effort_router.py)
+[![runtimes: 5](https://img.shields.io/badge/runtimes-Codex%20%C2%B7%20Claude%20Code%20%C2%B7%20OpenCode%20%C2%B7%20OpenClaw%20%C2%B7%20Hermes-0EA5E9.svg)](#what-actually-changes-per-runtime)
 
-One deterministic prompt classifier for **Codex and Claude Code**, plus an optional, remixable starter workflow. It routes work into four effort lanes, installs matching profiles and agent definitions, preserves existing hooks, and fails open when hook input is invalid.
+One deterministic effort policy for five coding-agent runtimes, plus the working habits that keep an agent harness small enough to be used.
 
-> Honest boundary: a prompt hook cannot secretly hot-swap the model of the active parent session. This project adds routing context, provides explicit next-session profiles, and routes Codex delegation through verified built-in agents (`explorer`, `worker`, `default`).
+Every prompt is classified into one of four lanes — **fast, daily, deep, critical** — by a 200-line Python file with no dependencies. The same file runs as a shell hook in Codex and Claude Code, and behind thin plugins in OpenCode, OpenClaw, and Hermes Agent. Where a runtime lets a hook change the model or reasoning effort, Effort Lanes can enforce the lane; everywhere else it injects an honest routing hint and says so.
 
-![15-second effort router demo](assets/effort-router-demo.gif)
+![15-second demo](assets/effort-router-demo.gif)
 
-## Why this exists
+## Why
 
-Using maximum reasoning for every task is slow and wasteful. Using minimum reasoning for risky work is fragile. Beginners also need a clear next step, while experienced users need pieces they can mix into an existing harness. The core router stays small; the workflow skills are opt-in.
+Maximum reasoning on every prompt is slow and expensive. Minimum reasoning on a production migration is how incidents start. Most people pick one setting and leave it. Effort Lanes makes the choice per prompt, deterministically, in under 50 ms, and never blocks a prompt: malformed input, malformed config, or a missing router all fail open.
 
-| Lane | Codex default | Claude default | Best fit |
-|---|---|---|---|
-| Fast | Luna / medium | Haiku / medium | exact lookup, inventory, formatting |
-| Daily | Terra / medium | Sonnet / medium | exploration, review, explanation |
-| Deep | Sol / high | Sonnet / high | implementation, integration, debugging |
-| Critical | Astra / high | Opus / high | security, safety, irreversible decisions |
+| Lane | Signal | Effort | Codex default | Claude default |
+|---|---|---|---|---|
+| Fast | short exact lookups, counts, formatting | medium | Luna / medium | Haiku / medium |
+| Daily | research, review, explanation | medium | Terra / medium | Sonnet / medium |
+| Deep | implement, refactor, debug, end-to-end | high | Sol / high | Sonnet / high |
+| Critical | security, production, payments, safety, repeated failure | high | Astra / high | Opus / high |
 
-These mappings are starting points, not benchmarks. Model availability and the best effort level vary by account, release, and workload. Edit the small TOML/Markdown files to fit your environment.
+Safety signals win over everything: `lane=fast audit security` still routes to Critical. Explicit lane requests (`lane=deep`, `effort-fast`) win over keyword matching. A project floor can raise but never lower a lane.
 
-## Install
+## What actually changes per runtime
 
-Requirements: Python 3 and `jq`.
+A prompt hook cannot secretly hot-swap the model of a running session. This table is the whole truth; each row was exercised on a real install (see [evidence](docs/evidence/VALIDATION.md)).
 
-```bash
-python3 --version
-jq --version
-```
+| Runtime | Hook | Injects routing context | Can change effort or model per prompt | Verified |
+|---|---|---|---|---|
+| Claude Code | `UserPromptSubmit` shell hook | yes | no — provides per-lane subagents and profiles instead | hook contract, installer |
+| Codex | `UserPromptSubmit` shell hook | yes | no — profiles `codex -p effort-deep` for the next session | hook contract, installer, built-in agent delegation |
+| **OpenCode** | plugin `chat.message` + `chat.params` | yes | **yes, opt-in** — sets `reasoningEffort` per call | live run: the model echoed the injected lane |
+| **OpenClaw** | plugin `before_prompt_build` + `before_model_resolve` | yes | **yes, opt-in** — overrides provider/model per lane | `openclaw plugins doctor` clean, `before_model_resolve` fired live |
+| Hermes Agent | plugin `pre_llm_call`, or a shell hook on the same event | yes | no — upstream issues #23739 / #7273 are open | `hermes plugins doctor` OK, `hermes hooks test` parsed the context |
 
-If either command is missing, install it with your operating system's package manager before continuing. `--help` and `--list-skills` work without those dependencies; installation and `--dry-run` require both.
+Enforcement is off by default. Switching models mid-session invalidates prompt caches and surprises people, so you turn it on deliberately: `"enforce": {"opencode": true}` in the global config, or `enforce: true` in the OpenClaw plugin config.
 
-For the seven portable skills only, use the open Agent Skills CLI without cloning this repository:
+## Install in one minute
 
-```bash
-npx skills add Jason-hub-star/codex-claude-effort-router --list
-npx skills add Jason-hub-star/codex-claude-effort-router --skill agent-starter -g -a codex -a claude-code
-```
-
-That route does **not** install the effort-routing hooks or Codex profiles. For the complete cross-runtime harness:
-
-```bash
-git clone https://github.com/Jason-hub-star/codex-claude-effort-router.git
-cd codex-claude-effort-router
-bash install.sh
-```
-
-Preview the full starter installation first if you prefer:
+Requirements: Python 3, `jq` for the Codex/Claude hook merge, Node for the OpenCode/OpenClaw plugins.
 
 ```bash
-bash install.sh --starter --dry-run
-bash install.sh --starter
+git clone https://github.com/Jason-hub-star/effort-lanes.git
+cd effort-lanes
+bash install.sh                 # every runtime detected on this machine, core only
+bash install.sh --starter       # plus all ten workflow skills
+bash install.sh --runtimes claude,opencode --skills decision-sheet,evidence-audit
+bash install.sh --dry-run       # print targets, change nothing
 ```
 
-Restart active Codex and Claude Code sessions after installation so newly installed agent definitions can be discovered. Codex custom-agent exposure varies by client/runtime; the automatic hint therefore uses built-in agents and treats the included custom TOML files as opt-in examples.
+The installer copies one shared router to `~/.config/effort-lanes/effort_router.py`, merges its own hook entry without touching yours, converges duplicates to exactly one handler, makes one-time `*.effort-router.bak` backups, and refuses to write if a settings file is not valid JSON. Restart open sessions afterwards.
 
-The default install is core-only. The installer creates one-time `*.effort-router.bak` backups, preserves unrelated hook handlers, and converges its own handler to exactly one canonical entry.
+Other routes:
 
-There is no automatic core uninstaller yet. Do not delete an entire Codex or Claude directory. Restore only the specific `*.effort-router.bak` files after inspecting them, or use `npx skills remove` for skills installed through the external Agent Skills CLI.
+- **Claude Code plugin marketplace** — `/plugin marketplace add Jason-hub-star/effort-lanes`, then `/plugin install effort-lanes@effort-lanes`. Installs the hook, the four lane subagents, and the skills natively.
+- **Skills only, any runtime** — `npx skills add Jason-hub-star/effort-lanes --list`.
+- **OpenClaw** — `openclaw plugins install ./openclaw` (the installer runs this for you when the CLI is present).
+- **Hermes** — the installer copies the plugin and runs `hermes plugins enable effort-lanes`. Prefer a subprocess boundary? Add a shell hook instead:
 
-## Pick your path
+  ```yaml
+  # ~/.hermes/config.yaml
+  hooks:
+    pre_llm_call:
+      - command: "python3 ~/.config/effort-lanes/effort_router.py"
+        timeout: 5
+  ```
 
-| You are… | Start here | What gets installed |
-|---|---|---|
-| New to coding agents | `bash install.sh --starter` | Core router + all seven workflow skills |
-| Trying current harness ideas | `bash install.sh --skills morning-brief,evidence-audit` | Core + only the experiments you name |
-| Mixing into an existing harness | `bash install.sh --list-skills` | Nothing; inspect and copy/select individual skill folders |
+## Configure
 
-The starter workflow is a menu, not a mandatory ceremony:
+Drop `.effort-lanes.json` in a project (found by walking up from the working directory) or `~/.config/effort-lanes/config.json` globally. Project values win; keyword lists merge. Every key is optional and a malformed file is ignored.
 
-```text
-Morning → Aim → [Converge if risky] → Goal → [Phase loop if 3+ phases] → Audit
+```json
+{
+  "floor": "deep",
+  "default_lane": "daily",
+  "keywords": { "critical": ["movej", "joint motion"] },
+  "lanes": { "critical": { "opencode": "anthropic/claude-opus-5", "openclaw": "anthropic/claude-opus-5" } },
+  "enforce": { "opencode": false }
+}
 ```
 
-- `morning-brief` (`아침`) recovers the last known state and one next action.
-- `aim-before-build` (`조준`) checks whether the work is conflicting, done, partial, or absent.
-- `converge-plan` (`수렴`) stress-tests expensive decisions and ends with a falsifiable experiment.
-- `goal-contract` (`골`) freezes an evidence-based finish line for multi-turn work.
-- `phase-loop` (`페이즈루프`) advances an approved multi-phase plan only when each gate passes.
-- `evidence-audit` (`감사`) assigns a release-readiness verdict from direct evidence.
-- `agent-starter` chooses exactly one of those stages for a beginner.
+`floor` is for repositories where a wrong guess is expensive (hardware, production infrastructure): every prompt starts at that lane. `lanes.<lane>.<runtime>` sets the model a runtime should use for that lane; enforcement reads it. See [`router/config.example.json`](router/config.example.json).
 
-Run `bash install.sh --help` or read [skills/README.md](skills/README.md) for selective installation and remixing guidance.
-
-## Use
-
-Normal prompts are classified automatically. You can also request a lane explicitly:
+Ask for a lane explicitly whenever you want:
 
 ```text
 lane=fast list the changed files
-effort-daily review the API boundary
 effort-deep implement and test this change
 effort-critical audit this production migration
 ```
 
-Safety signals raise the floor, so `effort-fast audit security` still routes to Critical.
+## Workflow skills
 
-To launch Codex directly with a profile:
+Ten portable `SKILL.md` stages distilled from one operator's repeated habits. They are a menu, not a ceremony; `agent-starter` picks exactly one for a beginner.
+
+```text
+morning-brief → aim-before-build → decision-sheet? → converge-plan? → goal-contract? → phase-loop? → evidence-audit
+                                   harness-audit ⇄ absorb   (maintenance: keep the set small)
+```
+
+- `aim-before-build` (`조준`) — the cheapest outcome is discovering nothing needs building.
+- `decision-sheet` (`그릴미`) — every question ships with a recommended answer; a blank reply means "agreed". A file-round-trip variant of Matt Pocock's `grill-me`.
+- `converge-plan` (`수렴`) — sealed rubric, adversarial rounds, ends with the cheapest experiment that could kill the plan.
+- `goal-contract` (`골`) — outcome, verification, constraints, boundaries, iteration policy, stop condition; runtime-neutral.
+- `phase-loop` (`페이즈루프`) — a 3+ phase plan advances only through passing gates.
+- `evidence-audit` (`감사`) — `NOT_READY` / `READY_FOR_REVIEW` / `READY_TO_SHARE`, from evidence only.
+- `harness-audit` (`정비`) — measures which installed skills are actually invoked from session logs. Dead means zero calls **and** no entry point. Keeps a project at 18 skills or fewer: across 14 repositories, sets of ≤18 skills recovered 33–83% of them, sets of 26–27 recovered 19–30%.
+- `absorb` (`흡수`) — classifies an external source as already-present / extend / new, and logs rejections so the same source is never re-evaluated.
+- `morning-brief` (`아침`) — yesterday's baton and one next action.
+
+Full table and install options in [skills/README.md](skills/README.md).
+
+## Docs gate and scaffold
+
+Conventions written down are not followed; conventions enforced by a failing script are. `scaffold/scripts/check-docs.sh` fails when:
+
+1. anything other than entry documents sits in the `docs/` root;
+2. an archived file lacks `<name>-<superseded|abandoned|legacy|progresslog>-<YYYY-MM-DD>.<ext>` or is missing from the archive index;
+3. a "source truth" path in `docs/status/DOC-SYNC-MATRIX.md` does not exist;
+4. a project installs more than 18 skills.
 
 ```bash
-codex -p effort-fast
-codex -p effort-daily
-codex -p effort-deep
-codex -p effort-critical
+bash install.sh --scaffold ~/code/my-project     # docs/ layout + gate; never overwrites
+bash scripts/check-docs.sh                        # run the gate
 ```
+
+This repository runs the same gate on itself in CI. It caught a stray file on its first run.
 
 ## Verify
 
 ```bash
 bash scripts/check.sh
-python3 router/effort_router.py --classify --prompt "fix the bug and test it"
+python3 router/effort_router.py --classify --json --runtime opencode --prompt "fix the bug and test it"
 ```
 
-The automated suite covers 32 English/Korean prompts, the hook output contract, malformed and non-object JSON, safety overrides, installation backups, unrelated-hook preservation, duplicate repair, core-only/selective/starter installs, and idempotency. See [validation evidence](evidence/VALIDATION.md).
+The suite covers 32 English/Korean prompts, the hook contracts for both shell-hook shapes, malformed and hostile config, project floors, plugin contracts for OpenCode and OpenClaw under plain Node, the Hermes plugin, the installer across five runtime homes, and ten break tests for the docs gate. Live-runtime evidence and the failures kept on record are in [docs/evidence/VALIDATION.md](docs/evidence/VALIDATION.md).
 
 ## Architecture
 
@@ -123,25 +144,23 @@ The automated suite covers 32 English/Korean prompts, the hook output contract, 
 
 ![Optional starter workflow](assets/starter-workflow.svg)
 
-Editable Archify sources and interactive diagrams are included for both [effort routing](docs/effort-routing.workflow.json) and the [starter workflow](docs/starter-workflow.lifecycle.json). The [Remotion promo source](promo/remotion/) is included too.
+Editable diagram sources live in [docs/ref/diagrams](docs/ref/diagrams/); the Remotion promo source is in [promo/remotion](promo/remotion/).
 
-## Prior art and scope
+## Positioning and prior art
 
-The closest project found was [`claude-model-router-hook`](https://github.com/tzachbon/claude-model-router-hook), which focuses on Claude Code prompt/tool routing. Broader harnesses such as [`madebywild/agent-harness`](https://github.com/madebywild/agent-harness) and [`claudex5-engineering-harness`](https://github.com/woongjaejung/claudex5-engineering-harness) solve larger orchestration/setup problems. This repository stays deliberately narrow: shared Codex + Claude effort classification, transparent limitations, and reproducible regression evidence. See the [comparison](docs/COMPARISON.md).
-
-An additional [installation UX benchmark](docs/INSTALL-UX-RESEARCH.ko.md) compares this project with Superpowers, BMad, wshobson/agents, and Compound Engineering. The [v0.2 final evaluation](docs/FINAL-EVALUATION.ko.md) records the release verdict and remaining risks. Current verdict: suitable for technical beginners and remixers, but not yet as discoverable or update-friendly as a native marketplace plugin.
+Until v0.2 this project was deliberately a narrow router for Codex and Claude Code. v0.3 widened it to a cross-runtime harness after measuring where hooks can actually change effort. The closest routers and the widely adopted harnesses it learned from (Superpowers, BMad, wshobson/agents, Compound Engineering) are compared in [docs/research/COMPARISON.md](docs/research/COMPARISON.md). What stays deliberate: one classifier file, no LLM in the routing path, no auto-enforcement, and every capability claim backed by a recorded run.
 
 ## Safety
 
-- Hook parsing fails open: invalid input exits successfully without blocking the prompt.
-- The router never executes user-supplied text.
-- Installed agent files are fixed repository assets, not generated from prompts.
-- Review any third-party hook before installing it; hooks run with your local user permissions.
+- Hook parsing fails open: invalid input or config exits successfully without blocking the prompt.
+- The router never executes user-supplied text. Plugins pass the prompt to it as a process argument, never through a shell.
+- Installed agent, profile, plugin, and skill files are fixed repository assets, not generated from prompts.
+- OpenClaw and OpenCode plugins run in-process with the runtime's own trust level; read them before installing, and add `effort-lanes` to OpenClaw's `plugins.allow`.
 
 See [SECURITY.md](SECURITY.md) for reporting.
 
 ## License
 
-MIT. The workflow skills are portable extracts of one operator's repeated habits, not claims that every task needs process.
+MIT.
 
-[한국어 README](README.ko.md) · [15-second MP4](assets/effort-router-demo.mp4)
+[한국어 README](README.ko.md) · [18-second MP4](assets/effort-router-demo.mp4)

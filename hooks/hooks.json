@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/router/effort_router.py\"",
+            "timeout": 2,
+            "statusMessage": "Routing task effort"
+          }
+        ]
+      }
+    ]
+  }
+}

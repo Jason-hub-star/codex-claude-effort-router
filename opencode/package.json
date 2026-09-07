@@ -1,0 +1,12 @@
+{
+  "name": "opencode-effort-lanes",
+  "version": "0.3.0",
+  "description": "Effort Lanes plugin for OpenCode: per-prompt effort routing context, optional reasoningEffort enforcement.",
+  "type": "module",
+  "main": "effort-lanes.js",
+  "exports": "./effort-lanes.js",
+  "files": ["effort-lanes.js"],
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/Jason-hub-star/effort-lanes" },
+  "keywords": ["opencode", "opencode-plugin", "effort", "routing"]
+}
