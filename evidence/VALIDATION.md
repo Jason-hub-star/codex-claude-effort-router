@@ -13,8 +13,13 @@ Last updated: 2026-09-07 (Asia/Seoul)
 | Installer preservation | PASS | unrelated hook remains after install |
 | Installer convergence | PASS | a malformed duplicate is replaced by exactly one canonical handler |
 | Installer idempotency | PASS | settings hashes are unchanged after a second install |
+| Optional skill schemas | PASS | all seven `SKILL.md` folders pass the official Codex skill validator |
+| Install modes | PASS | default installs no skills; selective and starter modes copy the expected skills to both runtimes |
+| Invalid skill boundary | PASS | an unknown requested skill exits non-zero before changing either runtime |
+| Preflight boundary | PASS | invalid settings and a non-directory runtime home stop before either runtime is modified |
+| Beginner install edges | PASS | dependency errors, paths with spaces, comma whitespace, duplicates, and prior-skill backups |
 | Archify schema/render | PASS | finite SVG, orthogonal arrows, legend clearance, browser visual inspection |
-| Remotion render | PASS | 450 frames, 1280×720, 30 fps, 15.06 s, H.264 output |
+| Remotion render | PASS | v0.1 artifact retained: 450 frames, 1280×720, 30 fps, 15.06 s, H.264 output |
 | Built-in Codex delegation | PASS | `explorer` spawned and returned `BUILTIN_EXPLORER_OK` |
 | Daily Codex profile | PASS | persisted thread reports `gpt-5.6-terra` / `medium` |
 | Deep Codex profile | PASS | persisted thread reports `gpt-5.6-sol` / `high` |

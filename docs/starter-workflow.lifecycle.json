@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Remixable Agent Work Lifecycle",
+    "subtitle": "Use one next stage; skip optional ceremony when the task is small",
+    "output": "docs/starter-workflow.html",
+    "viewBox": [980, 660]
+  },
+  "lanes": [
+    { "id": "main", "label": "Default path" },
+    { "id": "optional", "label": "Risk branch" },
+    { "id": "terminal", "label": "Completion verdict" }
+  ],
+  "states": [
+    { "id": "morning", "type": "start", "label": "Morning", "sublabel": "recover context", "lane": "main", "col": 0, "step": "01", "tag": "아침" },
+    { "id": "aim", "type": "decision", "label": "Aim", "sublabel": "compare reality", "lane": "main", "col": 1, "step": "02", "tag": "조준" },
+    { "id": "goal", "type": "active", "label": "Goal", "sublabel": "freeze evidence", "lane": "main", "col": 2, "step": "03", "tag": "골" },
+    { "id": "phases", "type": "active", "label": "Phase Loop", "sublabel": "gate each phase", "lane": "main", "col": 3, "step": "04", "tag": "페이즈루프" },
+    { "id": "audit", "type": "decision", "label": "Audit", "sublabel": "confirm evidence", "lane": "main", "col": 4, "step": "05", "tag": "감사" },
+    { "id": "converge", "type": "waiting", "label": "Converge", "sublabel": "test the crux", "lane": "optional", "col": 0, "tag": "수렴" },
+    { "id": "share", "type": "success", "label": "Ready to Share", "sublabel": "checks passed", "lane": "terminal", "col": 2, "tag": "evidence" }
+  ],
+  "transitions": [
+    { "from": "aim", "to": "converge", "label": "costly risk", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "drop", "labelAt": [325, 202] },
+    { "from": "converge", "to": "goal", "label": "crux tested", "variant": "emphasis", "fromSide": "right", "toSide": "bottom", "route": "drop" },
+    { "from": "audit", "to": "share", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "straight" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Beginner path",
+      "items": [
+        "agent-starter chooses exactly one next stage",
+        "Small questions and one-line edits bypass the workflow",
+        "Every non-trivial path ends with runnable evidence"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Remix contract",
+      "items": [
+        "Install all seven skills or select individual folders",
+        "Converge and Phase Loop are conditional, not mandatory",
+        "The same Markdown skills work in Codex and Claude Code"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Stop rules",
+      "items": [
+        "Conflicting goals stop before implementation",
+        "A failed phase does not advance automatically",
+        "No direct evidence means not ready to share"
+      ]
+    }
+  ]
+}

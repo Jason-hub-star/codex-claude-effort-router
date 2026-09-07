@@ -22,3 +22,16 @@ The useful gap is not “one more full agent harness.” It is a small shared po
 5. includes both passing and failed validation history.
 
 The project deliberately does not auto-star itself, rewrite arbitrary settings, or claim that one effort table is universally optimal.
+
+## Adoption benchmark
+
+The first review found the closest small routers. A second review compared the installation experience with four widely adopted workflow harnesses:
+
+| Project | Stars on 2026-09-07 | Installation strength | Lesson applied here |
+|---|---:|---|---|
+| [obra/superpowers](https://github.com/obra/superpowers#installation) | 282,667 | Official Claude/Codex marketplace presence | Keep a single beginner entry point and explicit restart step |
+| [BMad Method](https://github.com/bmad-code-org/BMAD-METHOD/blob/main/docs/how-to/install-bmad.md) | 52,753 | Interactive module/tool selection plus `bmad-help` | Provide a starter router that chooses one next stage |
+| [wshobson/agents](https://github.com/wshobson/agents/blob/main/docs/harnesses.md) | 39,466 | Plugin-level and individual-skill installation | Make every workflow stage independently installable |
+| [Compound Engineering](https://github.com/EveryInc/compound-engineering-plugin#install) | 24,930 | Native instructions across many agent hosts | Separate portable skills from runtime-specific hooks |
+
+Stars are GitHub API snapshots, not quality scores. Full findings and local failure tests are in [INSTALL-UX-RESEARCH.ko.md](INSTALL-UX-RESEARCH.ko.md).
