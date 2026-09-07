@@ -1,0 +1,200 @@
+<svg viewBox="0 0 720 652" role="img" aria-label="One Prompt, Right-Sized Effort — A fail-open hook adds routing context without pretending to switch the active parent model (workflow diagram)" data-animation="trace" width="720" height="652" xmlns="http://www.w3.org/2000/svg"><style>@font-face { font-family: 'JetBrains Mono'; font-weight: 400; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 500; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 600; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 700; src: local('JetBrains Mono'), local('JetBrainsMono-Regular'); }
+svg { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono CJK SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', monospace; }
+:root, [data-theme="dark"] { --bg: #020617; --grid: #1e293b; --text: #ffffff; --text-muted: #94a3b8; --text-dim: #475569; --text-faint: #7d8da1; --panel: rgba(15, 23, 42, 0.5); --panel-border: #1e293b; --lane-fill: rgba(15, 23, 42, 0.22); --lane-stroke: #334155; --arrow: #64748b; --arrow-emphasis: #34d399; --mask: #0f172a; --frontend-fill: rgba(8, 51, 68, 0.4); --frontend-stroke: #22d3ee; --backend-fill: rgba(6, 78, 59, 0.4); --backend-stroke: #34d399; --database-fill: rgba(76, 29, 149, 0.4); --database-stroke: #a78bfa; --cloud-fill: rgba(120, 53, 15, 0.3); --cloud-stroke: #fbbf24; --security-fill: rgba(136, 19, 55, 0.4); --security-stroke: #fb7185; --messagebus-fill: rgba(251, 146, 60, 0.3); --messagebus-stroke: #fb923c; --external-fill: rgba(30, 41, 59, 0.5); --external-stroke: #94a3b8; --toolbar-bg: rgba(15, 23, 42, 0.8); --toolbar-border: #334155; --toolbar-text: #e2e8f0; --toolbar-hover: rgba(15, 23, 42, 0.95); --toolbar-menu-bg: #0f172a; }
+[data-theme="light"] { --bg: #f8fafc; --grid: #e2e8f0; --text: #0f172a; --text-muted: #64748b; --text-dim: #94a3b8; --text-faint: #64748b; --panel: #ffffff; --panel-border: #e2e8f0; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #94a3b8; --arrow-emphasis: #059669; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; }
+svg { width: 100%; min-width: min(900px, 100%); display: block; }
+.c-grid { stroke: var(--grid); fill: none; }
+.c-mask { fill: var(--mask); stroke: none; }
+.c-frontend { fill: var(--frontend-fill); stroke: var(--frontend-stroke); }
+.c-backend { fill: var(--backend-fill); stroke: var(--backend-stroke); }
+.c-database { fill: var(--database-fill); stroke: var(--database-stroke); }
+.c-cloud { fill: var(--cloud-fill); stroke: var(--cloud-stroke); }
+.c-security { fill: var(--security-fill); stroke: var(--security-stroke); }
+.c-messagebus { fill: var(--messagebus-fill); stroke: var(--messagebus-stroke); }
+.c-external { fill: var(--external-fill); stroke: var(--external-stroke); }
+.t-primary { fill: var(--text); }
+.t-muted { fill: var(--text-muted); }
+.t-dim { fill: var(--text-dim); }
+.t-frontend { fill: var(--frontend-stroke); }
+.t-backend { fill: var(--backend-stroke); }
+.t-database { fill: var(--database-stroke); }
+.t-cloud { fill: var(--cloud-stroke); }
+.t-security { fill: var(--security-stroke); }
+.t-messagebus { fill: var(--messagebus-stroke); }
+.t-external { fill: var(--external-stroke); }
+.a-default { stroke: var(--arrow); fill: none; }
+.a-emphasis { stroke: var(--arrow-emphasis); fill: none; }
+.a-security { stroke: var(--security-stroke); fill: none; stroke-dasharray: 5, 5; }
+.a-dashed { stroke: var(--database-stroke); fill: none; stroke-dasharray: 4, 4; }
+.m-default { fill: var(--arrow); }
+.m-emphasis { fill: var(--arrow-emphasis); }
+.m-security { fill: var(--security-stroke); }
+.m-dashed { fill: var(--database-stroke); }
+.c-security-group { fill: transparent; stroke: var(--security-stroke); stroke-dasharray: 4, 4; }
+.c-region { fill: rgba(251, 191, 36, 0.05); stroke: var(--cloud-stroke); stroke-dasharray: 8, 4; }
+.c-lane { fill: var(--lane-fill); stroke: var(--lane-stroke); stroke-dasharray: 6, 6; }
+svg[data-animation="trace"] [data-animate="edge"] { stroke-dasharray: 10, 8; stroke-dashoffset: 54; animation-duration: 2.4s; animation-timing-function: linear; animation-iteration-count: infinite; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: archify-edge-flow; animation-timeline: auto; animation-range: normal; animation-delay: calc(var(--step, 0) * 160ms); }
+svg[data-animation="trace"] [data-animate="node"] { transform-box: fill-box; transform-origin: center center; animation-duration: 3.6s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: normal; animation-fill-mode: none; animation-play-state: running; animation-name: archify-node-pulse; animation-timeline: auto; animation-range: normal; animation-delay: calc(var(--step, 0) * 160ms); }
+:root, svg { --bg: #020617; --grid: #1e293b; --text: #ffffff; --text-muted: #94a3b8; --text-dim: #475569; --text-faint: #7d8da1; --panel: rgba(15, 23, 42, 0.5); --panel-border: #1e293b; --lane-fill: rgba(15, 23, 42, 0.22); --lane-stroke: #334155; --arrow: #64748b; --arrow-emphasis: #34d399; --mask: #0f172a; --frontend-fill: rgba(8, 51, 68, 0.4); --frontend-stroke: #22d3ee; --backend-fill: rgba(6, 78, 59, 0.4); --backend-stroke: #34d399; --database-fill: rgba(76, 29, 149, 0.4); --database-stroke: #a78bfa; --cloud-fill: rgba(120, 53, 15, 0.3); --cloud-stroke: #fbbf24; --security-fill: rgba(136, 19, 55, 0.4); --security-stroke: #fb7185; --messagebus-fill: rgba(251, 146, 60, 0.3); --messagebus-stroke: #fb923c; --external-fill: rgba(30, 41, 59, 0.5); --external-stroke: #94a3b8; --toolbar-bg: rgba(15, 23, 42, 0.8); --toolbar-border: #334155; --toolbar-text: #e2e8f0; --toolbar-hover: rgba(15, 23, 42, 0.95); --toolbar-menu-bg: #0f172a; }
+@media (prefers-color-scheme: light) { :root, svg { --bg: #f8fafc; --grid: #e2e8f0; --text: #0f172a; --text-muted: #64748b; --text-dim: #94a3b8; --text-faint: #64748b; --panel: #ffffff; --panel-border: #e2e8f0; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #94a3b8; --arrow-emphasis: #059669; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; } }
+svg[data-theme="light"] { --bg: #f8fafc; --grid: #e2e8f0; --text: #0f172a; --text-muted: #64748b; --text-dim: #94a3b8; --text-faint: #64748b; --panel: #ffffff; --panel-border: #e2e8f0; --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1; --arrow: #94a3b8; --arrow-emphasis: #059669; --mask: #ffffff; --frontend-fill: rgba(34, 211, 238, 0.15); --frontend-stroke: #0891b2; --backend-fill: rgba(52, 211, 153, 0.18); --backend-stroke: #059669; --database-fill: rgba(167, 139, 250, 0.2); --database-stroke: #7c3aed; --cloud-fill: rgba(251, 191, 36, 0.18); --cloud-stroke: #d97706; --security-fill: rgba(251, 113, 133, 0.15); --security-stroke: #e11d48; --messagebus-fill: rgba(251, 146, 60, 0.15); --messagebus-stroke: #ea580c; --external-fill: rgba(148, 163, 184, 0.18); --external-stroke: #64748b; --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff; --toolbar-menu-bg: #ffffff; }
+svg[data-theme="dark"] { --bg: #020617; --grid: #1e293b; --text: #ffffff; --text-muted: #94a3b8; --text-dim: #475569; --text-faint: #7d8da1; --panel: rgba(15, 23, 42, 0.5); --panel-border: #1e293b; --lane-fill: rgba(15, 23, 42, 0.22); --lane-stroke: #334155; --arrow: #64748b; --arrow-emphasis: #34d399; --mask: #0f172a; --frontend-fill: rgba(8, 51, 68, 0.4); --frontend-stroke: #22d3ee; --backend-fill: rgba(6, 78, 59, 0.4); --backend-stroke: #34d399; --database-fill: rgba(76, 29, 149, 0.4); --database-stroke: #a78bfa; --cloud-fill: rgba(120, 53, 15, 0.3); --cloud-stroke: #fbbf24; --security-fill: rgba(136, 19, 55, 0.4); --security-stroke: #fb7185; --messagebus-fill: rgba(251, 146, 60, 0.3); --messagebus-stroke: #fb923c; --external-fill: rgba(30, 41, 59, 0.5); --external-stroke: #94a3b8; --toolbar-bg: rgba(15, 23, 42, 0.8); --toolbar-border: #334155; --toolbar-text: #e2e8f0; --toolbar-hover: rgba(15, 23, 42, 0.95); --toolbar-menu-bg: #0f172a; }
+rect.c-bg-rect { fill: var(--bg); }
+</style><rect width="100%" height="100%" class="c-bg-rect"/>
+        <!-- Definitions -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-default"/>
+          </marker>
+          <marker id="arrowhead-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-emphasis"/>
+          </marker>
+          <marker id="arrowhead-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-security"/>
+          </marker>
+          <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" class="m-dashed"/>
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+
+        <!-- Swimlanes -->
+        <rect x="40" y="52" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="74" class="t-dim" font-size="10" font-weight="600">01 / Shared Router</text>
+
+        <rect x="40" y="176" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="198" class="t-dim" font-size="10" font-weight="600">02 / Codex</text>
+
+        <rect x="40" y="300" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="322" class="t-dim" font-size="10" font-weight="600">03 / Claude Code</text>
+
+        <rect x="40" y="424" width="640" height="104" rx="10" class="c-lane" stroke-width="1"/>
+        <rect x="46" y="430" width="628" height="92" rx="8" class="c-security-group" stroke-width="1"/>
+        <text x="54" y="446" class="t-security" font-size="10" font-weight="600">EX / Safety + Evidence</text>
+
+        <!-- Phase headers -->
+        <line x1="42" y1="35" x2="346" y2="35" class="a-emphasis" stroke-width="1.1"/>
+        <rect x="42" y="27" width="304" height="16" rx="4" class="c-mask"/>
+        <text x="194" y="39" class="t-backend" font-size="8" font-weight="600" text-anchor="middle">Classify</text>
+        <line x1="384" y1="35" x2="546" y2="35" class="a-default" stroke-width="1.1"/>
+        <rect x="384" y="27" width="162" height="16" rx="4" class="c-mask"/>
+        <text x="465" y="39" class="t-muted" font-size="8" font-weight="600" text-anchor="middle">Route</text>
+        <line x1="579" y1="35" x2="671" y2="35" class="a-dashed" stroke-width="1.1"/>
+        <rect x="579" y="27" width="92" height="16" rx="4" class="c-mask"/>
+        <text x="625" y="39" class="t-messagebus" font-size="8" font-weight="600" text-anchor="middle">Verify</text>
+
+        <!-- Workflow groups -->
+        <rect x="170" y="90" width="380" height="58" rx="9" class="c-lane" stroke-width="1"/>
+        <text x="180" y="104" class="t-backend" font-size="7" font-weight="600">4 effort lanes</text>
+        <rect x="38" y="462" width="312" height="58" rx="9" class="c-security-group" stroke-width="1"/>
+        <text x="48" y="476" class="t-security" font-size="7" font-weight="600">Fail-open path</text>
+
+        <!-- Edge paths -->
+        <path d="M 134 119 L 254 119" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path d="M 346 119 L 454 119" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path d="M 500 145 L 500 166 L 430 166 L 430 217" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 134 243 L 384 243" class="a-dashed" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path d="M 476 243 L 579 243" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 134 367 L 384 367" class="a-dashed" data-animate="edge" style="--step:5" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path d="M 476 367 L 579 367" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path d="M 134 491 L 254 491" class="a-security" data-animate="edge" style="--step:7" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path d="M 346 491 L 579 491" class="a-dashed" data-animate="edge" style="--step:8" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path d="M 625 393 L 625 414 L 625 414 L 625 465" class="a-emphasis" data-animate="edge" style="--step:9" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+
+        <!-- Nodes -->
+        <rect x="42" y="93" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="42" y="93" width="92" height="52" rx="6" class="c-external" data-animate="node" style="--step:0" stroke-width="1.5"/>
+        <text x="88" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">User Prompt</text>
+        <text x="88" y="131" class="t-muted" font-size="8" text-anchor="middle">any language</text>
+
+        <rect x="254" y="85" width="92" height="68" rx="6" class="c-mask"/>
+        <rect x="254" y="85" width="92" height="68" rx="6" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+        <text x="300" y="106" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Classifier</text>
+        <text x="300" y="123" class="t-muted" font-size="8" text-anchor="middle">deterministic rules</text>
+        <text x="300" y="141" class="t-backend" font-size="7" text-anchor="middle">stdlib only</text>
+
+        <rect x="454" y="93" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="454" y="93" width="92" height="52" rx="6" class="c-messagebus" data-animate="node" style="--step:2" stroke-width="1.5"/>
+        <text x="500" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Route Context</text>
+        <text x="500" y="131" class="t-muted" font-size="8" text-anchor="middle">lane + rationale</text>
+
+        <rect x="42" y="217" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="42" y="217" width="92" height="52" rx="6" class="c-frontend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+        <text x="88" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Parent Session</text>
+        <text x="88" y="255" class="t-muted" font-size="8" text-anchor="middle">model unchanged</text>
+
+        <rect x="384" y="217" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="384" y="217" width="92" height="52" rx="6" class="c-cloud" data-animate="node" style="--step:4" stroke-width="1.5"/>
+        <text x="430" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Profile</text>
+        <text x="430" y="255" class="t-muted" font-size="8" text-anchor="middle">next session</text>
+
+        <rect x="579" y="217" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="579" y="217" width="92" height="52" rx="6" class="c-backend" data-animate="node" style="--step:5" stroke-width="1.5"/>
+        <text x="625" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Built-in Agent</text>
+        <text x="625" y="255" class="t-muted" font-size="8" text-anchor="middle">verified delegate</text>
+
+        <rect x="42" y="341" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="42" y="341" width="92" height="52" rx="6" class="c-frontend" data-animate="node" style="--step:6" stroke-width="1.5"/>
+        <text x="88" y="362" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Parent Session</text>
+        <text x="88" y="379" class="t-muted" font-size="8" text-anchor="middle">model unchanged</text>
+
+        <rect x="384" y="341" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="384" y="341" width="92" height="52" rx="6" class="c-cloud" data-animate="node" style="--step:7" stroke-width="1.5"/>
+        <text x="430" y="362" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Agent Hint</text>
+        <text x="430" y="379" class="t-muted" font-size="8" text-anchor="middle">Haiku · Sonnet · Opus</text>
+
+        <rect x="579" y="341" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="579" y="341" width="92" height="52" rx="6" class="c-backend" data-animate="node" style="--step:8" stroke-width="1.5"/>
+        <text x="625" y="362" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Subagent</text>
+        <text x="625" y="379" class="t-muted" font-size="8" text-anchor="middle">bounded delegate</text>
+
+        <rect x="42" y="465" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="42" y="465" width="92" height="52" rx="6" class="c-security" data-animate="node" style="--step:9" stroke-width="1.5"/>
+        <text x="88" y="486" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Bad Input</text>
+        <text x="88" y="503" class="t-muted" font-size="8" text-anchor="middle">malformed JSON</text>
+
+        <rect x="254" y="465" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="254" y="465" width="92" height="52" rx="6" class="c-security" data-animate="node" style="--step:10" stroke-width="1.5"/>
+        <text x="300" y="486" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Exit 0</text>
+        <text x="300" y="503" class="t-muted" font-size="8" text-anchor="middle">no blocked prompt</text>
+
+        <rect x="579" y="465" width="92" height="52" rx="6" class="c-mask"/>
+        <rect x="579" y="465" width="92" height="52" rx="6" class="c-database" data-animate="node" style="--step:11" stroke-width="1.5"/>
+        <text x="625" y="486" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Test Evidence</text>
+        <text x="625" y="503" class="t-muted" font-size="8" text-anchor="middle">matrix + installer</text>
+
+        <!-- Edge labels -->
+
+
+        <rect x="431.2" y="158" width="67.6" height="14" rx="3" class="c-mask"/>
+        <text x="465" y="168" class="t-muted" font-size="8" text-anchor="middle">hook context</text>
+
+
+
+
+
+        <rect x="421.5" y="471" width="82" height="14" rx="3" class="c-mask"/>
+        <text x="462.5" y="481" class="t-database" font-size="8" text-anchor="middle">regression gate</text>
+
+
+        <!-- Legend -->
+        <text x="175" y="552" class="t-primary" font-size="10" font-weight="600">Legend</text>
+        <rect x="175" y="564" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
+        <text x="195" y="572" class="t-muted" font-size="7">User UI</text>
+        <rect x="260" y="564" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+        <text x="280" y="572" class="t-muted" font-size="7">Agent logic</text>
+        <rect x="370" y="564" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
+        <text x="390" y="572" class="t-muted" font-size="7">Policy</text>
+        <rect x="455" y="564" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
+        <text x="475" y="572" class="t-muted" font-size="7">Tool action</text>
+        <rect x="565" y="564" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
+        <text x="585" y="572" class="t-muted" font-size="7">Context / trace</text>
+      </svg>

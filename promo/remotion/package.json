@@ -1,0 +1,21 @@
+{
+  "name": "effort-router-promo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts EffortRouter ../../assets/effort-router-demo.mp4 --codec=h264 --crf=23",
+    "still": "remotion still src/index.ts EffortRouter ../../assets/effort-router-poster.png --frame=360"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.520",
+    "@remotion/renderer": "^4.0.520",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "remotion": "^4.0.520"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "typescript": "^5.9.3"
+  }
+}

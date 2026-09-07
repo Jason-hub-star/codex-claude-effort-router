@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "One Prompt, Right-Sized Effort",
+    "subtitle": "A fail-open hook adds routing context without pretending to switch the active parent model",
+    "output": "docs/effort-routing.html",
+    "animation": "trace"
+  },
+  "lanes": [
+    { "id": "intake", "label": "Shared Router" },
+    { "id": "codex", "label": "Codex" },
+    { "id": "claude", "label": "Claude Code" },
+    { "id": "safety", "label": "Safety + Evidence", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "classify", "label": "Classify", "fromCol": 0, "toCol": 2, "variant": "emphasis" },
+    { "id": "route", "label": "Route", "fromCol": 3, "toCol": 4 },
+    { "id": "verify", "label": "Verify", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "four_lanes", "label": "4 effort lanes", "lane": "intake", "fromCol": 1, "toCol": 4, "variant": "emphasis" },
+    { "id": "fallback", "label": "Fail-open path", "lane": "safety", "fromCol": 0, "toCol": 2, "variant": "security" }
+  ],
+  "nodes": [
+    { "id": "prompt", "lane": "intake", "col": 0, "type": "external", "label": "User Prompt", "sublabel": "any language" },
+    { "id": "classifier", "lane": "intake", "col": 2, "type": "backend", "label": "Classifier", "sublabel": "deterministic rules", "tag": "stdlib only" },
+    { "id": "context", "lane": "intake", "col": 4, "type": "messagebus", "label": "Route Context", "sublabel": "lane + rationale" },
+    { "id": "codex_parent", "lane": "codex", "col": 0, "type": "frontend", "label": "Parent Session", "sublabel": "model unchanged" },
+    { "id": "codex_profile", "lane": "codex", "col": 3, "type": "cloud", "label": "Profile", "sublabel": "next session" },
+    { "id": "codex_agent", "lane": "codex", "col": 5, "type": "backend", "label": "Built-in Agent", "sublabel": "verified delegate" },
+    { "id": "claude_parent", "lane": "claude", "col": 0, "type": "frontend", "label": "Parent Session", "sublabel": "model unchanged" },
+    { "id": "claude_hint", "lane": "claude", "col": 3, "type": "cloud", "label": "Agent Hint", "sublabel": "Haiku · Sonnet · Opus" },
+    { "id": "claude_agent", "lane": "claude", "col": 5, "type": "backend", "label": "Subagent", "sublabel": "bounded delegate" },
+    { "id": "bad_input", "lane": "safety", "col": 0, "type": "security", "label": "Bad Input", "sublabel": "malformed JSON" },
+    { "id": "fail_open", "lane": "safety", "col": 2, "type": "security", "label": "Exit 0", "sublabel": "no blocked prompt" },
+    { "id": "tests", "lane": "safety", "col": 5, "type": "database", "label": "Test Evidence", "sublabel": "matrix + installer" }
+  ],
+  "edges": [
+    { "from": "prompt", "to": "classifier", "variant": "emphasis" },
+    { "from": "classifier", "to": "context", "variant": "emphasis" },
+    { "from": "context", "to": "codex_profile", "label": "hook context", "variant": "default", "fromSide": "bottom", "toSide": "top", "route": "drop", "labelDy": 12 },
+    { "from": "codex_parent", "to": "codex_profile", "variant": "dashed" },
+    { "from": "codex_profile", "to": "codex_agent", "variant": "default" },
+    { "from": "claude_parent", "to": "claude_hint", "variant": "dashed" },
+    { "from": "claude_hint", "to": "claude_agent", "variant": "default" },
+    { "from": "bad_input", "to": "fail_open", "variant": "security" },
+    { "from": "fail_open", "to": "tests", "label": "regression gate", "variant": "dashed" },
+    { "from": "claude_agent", "to": "tests", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Transparent by Design",
+      "items": [
+        "Hooks add context; they do not hot-swap the parent model",
+        "Explicit lane requests work unless safety raises the floor",
+        "New custom agents load after the client session restarts"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One Classifier, Two Runtimes",
+      "items": [
+        "Fast for exact mechanical work",
+        "Daily for read-heavy work",
+        "Deep for implementation and integration",
+        "Critical for security, safety, and irreversible work"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Regression Evidence",
+      "items": [
+        "32 English and Korean classification cases",
+        "Malformed JSON and non-object payloads fail open",
+        "Installer preserves unrelated hooks and converges exactly once"
+      ]
+    }
+  ]
+}
