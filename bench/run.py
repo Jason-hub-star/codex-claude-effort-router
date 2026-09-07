@@ -31,10 +31,15 @@ OPENCODE = os.environ.get("OPENCODE_BIN", "opencode")
 PLUGIN = Path.home() / ".config" / "opencode" / "plugins" / "effort-lanes.js"
 LANES = ("fast", "daily", "deep", "critical")
 CONDITIONS = {
+    # pure = external plugins disabled; effort = reasoningEffort forced for every call;
+    # lane_config = a config file the router reads, so a single lane's effort can change.
     "none": {"pure": True},
+    "always-low": {"pure": True, "effort": "low"},
     "always-high": {"pure": True, "effort": "high"},
     "advisory": {"pure": False},
     "enforce": {"pure": False, "env": {"EFFORT_LANES_ENFORCE": "1"}},
+    "enforce-low": {"pure": False, "env": {"EFFORT_LANES_ENFORCE": "1"},
+                    "lane_config": {"lanes": {"fast": {"effort": "low"}}}},
 }
 
 
@@ -84,6 +89,24 @@ def routed_lane(debug: Path) -> str | None:
     return lane
 
 
+def routed_effort(debug: Path) -> str | None:
+    """The effort actually applied to the API call, read back from the plugin's own log.
+
+    The plugin logs the lane's effort on every turn but only applies it when enforcement is
+    on, so an advisory turn must report None rather than the value it would have used.
+    """
+    effort = None
+    if debug.exists():
+        for line in debug.read_text().splitlines():
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            if record.get("hook") == "chat.params" and record.get("effort") and record.get("enforce"):
+                effort = record["effort"]
+    return effort
+
+
 def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
     spec = CONDITIONS[cond]
     work = Path(tempfile.mkdtemp(prefix=f"bench-{task['id']}-{cond}-"))
@@ -95,7 +118,11 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
     debug = work / ".bench_lanes.jsonl"
     env["EFFORT_LANES_DEBUG"] = str(debug)
     # isolate the router from this machine's personal config and test the repository's router, not an installed copy
-    env["EFFORT_LANES_CONFIG"] = str(work / ".no-global-config.json")
+    lane_config = spec.get("lane_config")
+    config_path = work / ".effort-lanes-config.json"
+    if lane_config:
+        config_path.write_text(json.dumps(lane_config))
+    env["EFFORT_LANES_CONFIG"] = str(config_path) if lane_config else str(work / ".no-global-config.json")
     env["EFFORT_LANES_ROUTER"] = str(HERE.parent / "router" / "effort_router.py")
     if spec.get("effort"):
         env["OPENCODE_CONFIG_CONTENT"] = config_content(model, spec["effort"])
@@ -125,6 +152,7 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
     )
     return {
         "task": task["id"], "lane_expected": task["lane"], "lane_routed": routed_lane(debug),
+        "effort_applied": routed_effort(debug),
         "condition": cond, "model": model, "pass": verify.returncode == 0 and not timed_out,
         "verify": (verify.stdout + verify.stderr).strip()[-160:],
         "tokens": tokens, "cost": round(cost, 5), "wall_s": round(wall, 1), "steps": steps,
@@ -159,7 +187,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                     done += 1
                     print(f"[{done}/{total}] {task['id']:3} {cond:12} pass={row['pass']!s:5} lane={row['lane_routed']} "
                           f"in={row['tokens']['input']}+cache{row['tokens']['cache_read']} out={row['tokens']['output']} reason={row['tokens']['reasoning']} "
-                          f"cost={row['cost']} wall={row['wall_s']}s", flush=True)
+                          f"effort={row['effort_applied']} cost={row['cost']} wall={row['wall_s']}s", flush=True)
     print(f"results: {out}")
     return 0
 
@@ -239,6 +267,67 @@ def cmd_route(args: argparse.Namespace) -> int:
     return 0 if agree == len(tasks) else 1
 
 
+def cmd_decide(args: argparse.Namespace) -> int:
+    """Apply the sealed decision rule from docs/goals/GOAL-fast-lane-effort.md to a results file.
+
+    Order matters and resolves an ambiguity in the sealed table: C (pass-rate loss) is checked
+    first, then B (difference inside the 15% noise band), then A (a reduction beyond that band).
+    A therefore means "clearly lower", not merely "lower".
+    """
+    rows = [json.loads(l) for l in Path(args.file).read_text().splitlines() if l.strip()]
+    fast = [r for r in rows if r["lane_expected"] == "fast"]
+    if not fast:
+        print("no fast-lane rows")
+        return 1
+
+    def group(cond: str) -> list[dict]:
+        return [r for r in fast if r["condition"] == cond]
+
+    def reasoning(cond: str) -> float | None:
+        g = group(cond)
+        return statistics.mean([r["tokens"]["reasoning"] for r in g]) if g else None
+
+    def passes(cond: str) -> tuple[int, int]:
+        g = group(cond)
+        return sum(r["pass"] for r in g), len(g)
+
+    enforce, low = reasoning("enforce"), reasoning("enforce-low")
+    none_r, adv, always_low = reasoning("none"), reasoning("advisory"), reasoning("always-low")
+    ep, en = passes("enforce")
+    lp, ln = passes("enforce-low")
+
+    print("fast lane, mean reasoning tokens:")
+    for cond in ("none", "always-low", "always-high", "advisory", "enforce", "enforce-low"):
+        value, (p, n) = reasoning(cond), passes(cond)
+        if value is not None:
+            print(f"  {cond:12} {value:7.1f}   pass {p}/{n}")
+
+    if enforce is None or low is None:
+        print("\nINCONCLUSIVE: need both enforce and enforce-low")
+        return 1
+
+    delta = (low - enforce) / enforce if enforce else 0.0
+    if lp <= ep - 2:
+        case, action = "C", "keep medium; enforce-low lost pass rate"
+    elif abs(delta) <= 0.15:
+        case, action = "B", "keep medium; the effort knob is not the cause (inside the 15% noise band)"
+    elif low < enforce:
+        case, action = "A", "fast lane default becomes low"
+    else:
+        case, action = "C*", "keep medium; enforce-low was worse (case outside the sealed table)"
+    print(f"\ncase {case}: {action}")
+    print(f"  enforce={enforce:.1f} enforce-low={low:.1f} delta={delta:+.0%} pass {ep}/{en} vs {lp}/{ln}")
+
+    if none_r is not None and adv is not None:
+        excess = (adv - none_r) / none_r if none_r else float("inf")
+        print(f"case D: advisory vs none {excess:+.0%} -> " +
+              ("the injected context is itself the cost on fast prompts" if excess > 0.25 else "context cost is not dominant"))
+    if none_r is not None and always_low is not None:
+        print(f"case E: always-low vs none {always_low:.1f} vs {none_r:.1f} -> " +
+              ("provider default sits above low" if always_low < none_r else "provider default is already at or below low"))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -252,6 +341,9 @@ def main() -> int:
     run.set_defaults(func=cmd_run)
     route = sub.add_parser("route", help="offline routing agreement for tasks.json")
     route.set_defaults(func=cmd_route)
+    dec = sub.add_parser("decide", help="apply the sealed fast-lane decision rule to a results file")
+    dec.add_argument("file")
+    dec.set_defaults(func=cmd_decide)
     summ = sub.add_parser("summarize")
     summ.add_argument("file")
     summ.set_defaults(func=cmd_summarize)

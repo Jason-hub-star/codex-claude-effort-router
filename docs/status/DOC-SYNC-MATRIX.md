@@ -9,5 +9,6 @@
 | `hermes-plugin` | `hermes/effort-lanes/__init__.py` | `README.md` | `python3 -m unittest tests/test_hermes_plugin.py` |
 | `skills` | `skills/` | `skills/README.md`, `README.md` | `bash scripts/check.sh` |
 | `docs-gate` | `scaffold/scripts/check-docs.sh` | `docs/INDEX.md` | `bash tests/test_docs_gate.sh` |
+| `bench` | `bench/run.py` | `bench/README.md`, `docs/evidence/VALIDATION.md` | `python3 -m unittest discover -s tests -p 'test_bench.py'` |
 
 Rules: source truth points at code, never at another status document. `scripts/check-docs.sh` must stay byte-identical to the scaffold copy; `scripts/check.sh` enforces that.
