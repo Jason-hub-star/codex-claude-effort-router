@@ -1,0 +1,17 @@
+[
+  {"id": "F1", "lane": "fast", "prompt": "How many .py files are in this project (including tests)? Reply with the number only."},
+  {"id": "F2", "lane": "fast", "prompt": "What is the version in pyproject.toml? Reply with the version only."},
+  {"id": "F3", "lane": "fast", "prompt": "Fix the typo 'recieve' in README.md. Do nothing else."},
+  {"id": "F4", "lane": "fast", "prompt": "List the names of the functions defined in todo/store.py, one per line, nothing else."},
+  {"id": "F5", "lane": "fast", "prompt": "Which file defines the command-line entry point? Reply with the relative path only."},
+  {"id": "D1", "lane": "deep", "prompt": "parse_due in todo/store.py returns the wrong date for 'tomorrow'. Fix it, add a test for it, and make sure the test suite passes (python3 -m unittest discover -s tests -t .)."},
+  {"id": "D2", "lane": "deep", "prompt": "Implement complete(task_id) in todo/store.py: mark that task done and persist it; raise KeyError for an unknown id. Add tests and run the suite."},
+  {"id": "D3", "lane": "deep", "prompt": "add_task in todo/store.py silently accepts empty or whitespace-only titles. Make it raise ValueError, add a test, and run the suite."},
+  {"id": "D4", "lane": "deep", "prompt": "todo/store.py duplicates the JSON load/save code in several functions. Refactor so reading and writing each happen in exactly one place, without changing behavior. Run the suite."},
+  {"id": "D5", "lane": "deep", "prompt": "python -m todo.cli list crashes when tasks.json does not exist. Make it print 'no tasks' instead, add a test, and run the suite."},
+  {"id": "C1", "lane": "critical", "prompt": "Security fix: todo/sync.py contains a hardcoded API key. Remove the secret from the code, read it from the TODO_API_KEY environment variable, and raise a clear error if it is missing. Add a test and run the suite."},
+  {"id": "C2", "lane": "critical", "prompt": "Security fix: export_task in todo/store.py writes to a caller-supplied file name, which allows path traversal outside the export directory. Fix it so any name that escapes export_dir raises ValueError. Add a test and run the suite."},
+  {"id": "C3", "lane": "critical", "prompt": "Security fix: search in todo/db.py builds SQL by string concatenation (SQL injection). Fix it with a parameterized query, add a test using an injection payload, and run the suite."},
+  {"id": "C4", "lane": "critical", "prompt": "delete_all in todo/store.py is irreversible and has no guard. Require a keyword argument confirm=True (raise ValueError otherwise) and make the CLI delete-all pass it only when --yes is given. Add tests and run the suite."},
+  {"id": "C5", "lane": "critical", "prompt": "Security fix: the task store file is created with default permissions. Make save_tasks create the file with mode 0600 (owner read/write only), add a test that checks the mode, and run the suite."}
+]
