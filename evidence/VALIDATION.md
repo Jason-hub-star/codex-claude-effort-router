@@ -18,6 +18,8 @@ Last updated: 2026-09-07 (Asia/Seoul)
 | Invalid skill boundary | PASS | an unknown requested skill exits non-zero before changing either runtime |
 | Preflight boundary | PASS | invalid settings and a non-directory runtime home stop before either runtime is modified |
 | Beginner install edges | PASS | dependency errors, paths with spaces, comma whitespace, duplicates, and prior-skill backups |
+| Remote skill discovery | PASS | public GitHub shorthand exposes seven skills through `npx skills` |
+| Remote selective install | PASS | `agent-starter` copied into a clean temporary project with an exact source match and lock entry |
 | Archify schema/render | PASS | finite SVG, orthogonal arrows, legend clearance, browser visual inspection |
 | Remotion render | PASS | v0.1 artifact retained: 450 frames, 1280×720, 30 fps, 15.06 s, H.264 output |
 | Built-in Codex delegation | PASS | `explorer` spawned and returned `BUILTIN_EXPLORER_OK` |
@@ -44,3 +46,5 @@ bash scripts/check.sh
 - Static agent files do not prove that a client already running before installation has loaded them. Restart and verify in a fresh session.
 
 Future measurements should record task fixture, model version, effort, wall time, token use, pass/fail rubric, and repeated trials.
+
+The v0.2 candidate passed [GitHub Actions run 34126285413](https://github.com/Jason-hub-star/codex-claude-effort-router/actions/runs/34126285413) on Ubuntu after the starter workflow and installer-edge tests were pushed.

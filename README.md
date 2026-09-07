@@ -129,7 +129,7 @@ Editable Archify sources and interactive diagrams are included for both [effort 
 
 The closest project found was [`claude-model-router-hook`](https://github.com/tzachbon/claude-model-router-hook), which focuses on Claude Code prompt/tool routing. Broader harnesses such as [`madebywild/agent-harness`](https://github.com/madebywild/agent-harness) and [`claudex5-engineering-harness`](https://github.com/woongjaejung/claudex5-engineering-harness) solve larger orchestration/setup problems. This repository stays deliberately narrow: shared Codex + Claude effort classification, transparent limitations, and reproducible regression evidence. See the [comparison](docs/COMPARISON.md).
 
-An additional [installation UX benchmark](docs/INSTALL-UX-RESEARCH.ko.md) compares this project with Superpowers, BMad, wshobson/agents, and Compound Engineering. Current verdict: suitable for technical beginners and remixers, but not yet as discoverable or update-friendly as a native marketplace plugin.
+An additional [installation UX benchmark](docs/INSTALL-UX-RESEARCH.ko.md) compares this project with Superpowers, BMad, wshobson/agents, and Compound Engineering. The [v0.2 final evaluation](docs/FINAL-EVALUATION.ko.md) records the release verdict and remaining risks. Current verdict: suitable for technical beginners and remixers, but not yet as discoverable or update-friendly as a native marketplace plugin.
 
 ## Safety
 

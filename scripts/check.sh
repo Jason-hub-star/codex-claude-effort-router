@@ -10,7 +10,7 @@ bash "$ROOT/tests/test_installer.sh"
 
 for file in \
   README.md README.ko.md LICENSE SECURITY.md \
-  docs/COMPARISON.md docs/INSTALL-UX-RESEARCH.ko.md docs/VIDEO-ASSESSMENT.ko.md \
+  docs/COMPARISON.md docs/FINAL-EVALUATION.ko.md docs/INSTALL-UX-RESEARCH.ko.md docs/VIDEO-ASSESSMENT.ko.md \
   docs/effort-routing.workflow.json docs/effort-routing.html docs/starter-workflow.lifecycle.json docs/starter-workflow.html \
   evidence/VALIDATION.md assets/effort-routing.svg assets/starter-workflow.svg assets/effort-router-demo.mp4 \
   router/effort_router.py install.sh; do

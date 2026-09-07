@@ -65,7 +65,7 @@ bash install.sh --starter
 
 전 단계를 매번 쓰는 절차가 아닙니다. 작은 질문과 한 줄 수정은 바로 처리합니다. 자세한 조합법은 [스킬 안내](skills/README.md)를 보세요.
 
-`bash install.sh --help`에서 모든 설치 옵션을 확인할 수 있습니다. Superpowers·BMad·wshobson/agents·Compound Engineering과 비교한 [설치 UX 조사](docs/INSTALL-UX-RESEARCH.ko.md)도 남겼습니다. 현재 판정은 “기술 초보와 리믹스 사용자에게 사용 가능, 네이티브 마켓플레이스 수준의 발견·업데이트 경험은 아직 아님”입니다.
+`bash install.sh --help`에서 모든 설치 옵션을 확인할 수 있습니다. Superpowers·BMad·wshobson/agents·Compound Engineering과 비교한 [설치 UX 조사](docs/INSTALL-UX-RESEARCH.ko.md)와 [v0.2 최종평가](docs/FINAL-EVALUATION.ko.md)도 남겼습니다. 현재 판정은 “기술 초보와 리믹스 사용자에게 사용 가능, 네이티브 마켓플레이스 수준의 발견·업데이트 경험은 아직 아님”입니다.
 
 ## 기본 라우팅
 
