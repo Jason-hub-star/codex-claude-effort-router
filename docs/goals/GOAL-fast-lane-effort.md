@@ -56,3 +56,4 @@ A and B are mutually exclusive with C. D and E are reported regardless.
 - 2026-09-08: config already supports `lanes.fast.effort`; no router change needed to run the experiment.
 - 2026-09-08: experiment stopped without a decision. All 30 attempted rows had zero model steps and an unretryable OpenCode Go HTTP 401 account block; they are preserved in `bench/results/exp2-fastlane-BLOCKED.jsonl` and must not enter comparisons.
 - 2026-09-08: the runner now kills a hung process group at the per-run deadline and aborts the matrix after the first 401/402/403 provider error. Resume the original 75-run command only after a one-task provider smoke succeeds; changing model would invalidate the sealed comparison.
+- 2026-09-08: access smoke passed unchanged on `opencode-go/gpt-5.6-luna` with `--pure`: exact answer `OK`, 5.3 s wall time, $0.00528. The original 75-run command may resume; the blocked 30-row file remains excluded.
