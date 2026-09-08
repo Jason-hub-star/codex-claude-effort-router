@@ -6,7 +6,7 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 
 | Check | Result | Evidence |
 |---|---|---|
-| Classification matrix | PASS | 32 English/Korean prompts across four lanes |
+| Classification matrix | PASS | 47 English/Korean prompts across four lanes |
 | Hook contracts | PASS | `UserPromptSubmit` → `additionalContext`; `pre_llm_call` (Hermes shell hook shape) → `{"context"}`; other events emit nothing |
 | Fail-open boundary | PASS | malformed JSON, `null`, string, array, empty object exit 0 with no output |
 | Config boundary | PASS | malformed config, unknown lane names, non-integer limits are ignored; global config overridden by project config; keywords merge |
@@ -16,7 +16,7 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 | OpenClaw plugin contract | PASS | plain Node: `prependContext` returned, override only with `enforce` and a lane model, `provider/model` split, missing router fails open |
 | Hermes plugin contract | PASS | `register` binds `pre_llm_call`; context injected; empty message and missing router return `None` |
 | Harness audit script | PASS | fixture project: ALIVE/LINKED/DEAD verdicts, archived skills excluded, subdirectory sessions counted, idle project flagged |
-| Installer | PASS | five runtime homes, shared router, installed OpenCode plugin resolves it without env, skill trees copied whole, scaffold never overwrites, unknown skill/runtime and malformed settings abort before any write, idempotent, paths with spaces |
+| Installer | PASS | five runtime homes, shared router, installed OpenCode plugin resolves it without env, skill trees copied whole, scaffold never overwrites, unknown skill/runtime, malformed settings, missing Node, and Node 18 abort before any write; idempotent; paths with spaces |
 | WSL userland boundary | PASS | current branch copied into a clean `node:22-bookworm-slim` container; Debian 12, Bash 5.2, Python 3.11, Node 22.23 ran all 28 tests, plugin contracts, five-runtime installer, and docs gates |
 | Docs gate | PASS | ten break tests; the gate also runs on this repository and the scaffold copy must be byte-identical |
 | Skill schemas | PASS | ten `SKILL.md` folders: frontmatter, `## Next` baton, no TODO, single-line `metadata` rule for OpenClaw |
@@ -25,6 +25,7 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 
 | Runtime | What ran | Result |
 |---|---|---|
+| Claude Code | isolated `CLAUDE_CONFIG_DIR` and plugin cache; `claude plugin validate --strict .`, local marketplace add, install, list, and details | Validation passed; plugin status **enabled**; inventory reported 10 skills, 4 agents, and 1 `UserPromptSubmit` hook. No subscription or model call was needed |
 | OpenCode | `opencode run -m opencode-go/kimi-k2.7-code` with the plugin installed and `EFFORT_LANES_DEBUG` set; prompt asked the model to repeat any `[EFFORT LANES]` line it received | `chat.message` fired (lane=fast, explicit request), `chat.params` fired (effort=medium), the model answered **`LANE=FAST EFFORT=MEDIUM`** — the injected context reached the model |
 | OpenCode | same with `EFFORT_LANES_ENFORCE=1` | `chat.params` set `reasoningEffort`; the provider accepted the call without error. Whether that provider honors the field is not measured here |
 | OpenClaw | `openclaw plugins install --link ./openclaw`, `plugins info`, `plugins doctor` | Status `loaded`, "No plugin issues detected". A package-name/id mismatch warning was found and fixed (unscoped npm name must equal the manifest id) |
@@ -74,13 +75,15 @@ the full interpretation are in `bench/results/exp2-fastlane-20260908.jsonl` and 
 8. (bench) Prediction P1 failed: on `gpt-5.6-luna` the fast lane's `reasoningEffort=medium` and the injected guidance both cost more reasoning than the provider default. Recorded as a hypothesis for the next single-axis run, not patched on the same data.
 9. (platform) A clean Ubuntu 24.04 container with its default Node 18 passed the Python tests but failed loading the installed OpenCode ESM plugin. Repeating the same source and checks with Node 22 passed, so Node 22 is now an explicit prerequisite rather than a guessed compatibility floor.
 10. (bench) Experiment 2 first produced 30 unusable HTTP 401 rows. After a separate one-task access smoke succeeded, the original conditions and model were resumed in a new file; blocked rows remain excluded.
+11. (distribution) A fresh public GitHub marketplace add succeeded, but install rejected `agents: "./claude/agents/"`: the current CLI requires manifest entries to end in `.md`. Pointing at individual files passed schema validation but exposed a second defect: explicitly declaring the standard `hooks/hooks.json` loaded it twice and disabled the plugin.
+12. (distribution) Both custom declarations were removed in favor of Claude's standard `agents/` and `hooks/hooks.json` auto-discovery. A fresh isolated local marketplace install then loaded as enabled with the exact 10-skill, 4-agent, 1-hook inventory.
 
 ## What this does not prove
 
 - That the lane→effort mapping is optimal for any workload. Defaults are starting points.
 - That a hook changes the active parent model in Codex or Claude Code; it does not.
 - That OpenClaw's `before_prompt_build` injects in a live turn on this machine; no model credentials were available. The hook type and return shape were verified from the SDK typings and in plain Node.
-- That the Claude Code marketplace install path works end to end; the manifests follow the documented schema but were not exercised through `/plugin install`.
+- That the public GitHub marketplace path contains the fixes before this branch is pushed and checked from a fresh clone. The equivalent local-source marketplace path is verified end to end without a model call.
 - That any provider changes its reasoning when OpenCode passes `reasoningEffort`; only that the call is accepted.
 - That native Git Bash, PowerShell, Command Prompt, or Windows-host path interoperability works. The supported Windows boundary is the Linux userland inside WSL 2.
 

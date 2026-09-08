@@ -6,7 +6,5 @@
   "homepage": "https://github.com/Jason-hub-star/effort-lanes",
   "repository": "https://github.com/Jason-hub-star/effort-lanes",
   "license": "MIT",
-  "keywords": ["effort", "routing", "hooks", "skills", "codex", "opencode", "openclaw", "hermes"],
-  "agents": "./claude/agents/",
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["effort", "routing", "hooks", "skills", "codex", "opencode", "openclaw", "hermes"]
 }

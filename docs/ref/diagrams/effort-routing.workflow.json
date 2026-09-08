@@ -72,7 +72,7 @@
       "dot": "rose",
       "title": "Regression Evidence",
       "items": [
-        "32 English and Korean classification cases",
+        "47 English and Korean classification cases",
         "Malformed JSON and non-object payloads fail open",
         "Installer preserves unrelated hooks and converges exactly once"
       ]

@@ -36,11 +36,12 @@ for json in router/config.example.json opencode/package.json openclaw/openclaw.p
   .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
   jq -e . "$ROOT/$json" >/dev/null
 done
+jq -e '(has("agents") | not) and (has("hooks") | not)' "$ROOT/.claude-plugin/plugin.json" >/dev/null  # standard paths auto-discover both
 [[ "$(jq -r .name "$ROOT/openclaw/package.json")" == "$(jq -r .id "$ROOT/openclaw/openclaw.plugin.json")" ]]  # OpenClaw id hint
 
 for lane in fast daily deep critical; do
   test -f "$ROOT/codex/profiles/effort-$lane.config.toml"
-  test -f "$ROOT/claude/agents/effort-$lane.md"
+  test -f "$ROOT/agents/effort-$lane.md"
 done
 for agent in scout explorer builder architect; do
   file="$ROOT/codex/agents/effort-$agent.toml"
@@ -72,5 +73,16 @@ grep -q '<svg' "$ROOT/assets/effort-routing.svg"
 grep -q '<svg' "$ROOT/assets/starter-workflow.svg"
 grep -q 'One Prompt, Right-Sized Effort' "$ROOT/docs/ref/diagrams/effort-routing.html"
 grep -q 'Remixable Agent Work Lifecycle' "$ROOT/docs/ref/diagrams/starter-workflow.html"
+
+case_count="$(jq length "$ROOT/tests/cases.json")"
+grep -q "$case_count English/Korean prompts" "$ROOT/README.md"
+grep -q "프롬프트 ${case_count}개" "$ROOT/README.ko.md"
+grep -q "$case_count English/Korean prompts" "$ROOT/docs/evidence/VALIDATION.md"
+grep -q "$case_count English and Korean classification cases" "$ROOT/docs/ref/diagrams/effort-routing.workflow.json"
+grep -q "$case_count English and Korean classification cases" "$ROOT/docs/ref/diagrams/effort-routing.html"
+grep -q "$case_count routing cases" "$ROOT/promo/remotion/src/root.tsx"
+grep -q '>effort-lanes</div>' "$ROOT/promo/remotion/src/root.tsx"
+! grep -Eq '200-line|under 50 ms|effort-router-demo\.(gif|mp4)' "$ROOT/README.md"
+! grep -Eq '50ms 안|effort-router-demo\.(gif|mp4)' "$ROOT/README.ko.md"
 
 echo "Repository checks passed."

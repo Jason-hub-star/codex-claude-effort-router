@@ -78,11 +78,11 @@ const Video: React.FC = () => {
 
       <Center opacity={scene4}>
         <div style={{display: 'flex', gap: 18, marginBottom: 38}}>
-          {['32 routing cases', 'fail-open', 'idempotent install'].map((item, i) => (
+          {['47 routing cases', 'fail-open', 'idempotent install'].map((item, i) => (
             <div key={item} style={{padding: '15px 23px', borderRadius: 999, color: '#fff', background: [colors.cyan, colors.rose, colors.green][i], fontSize: 20, fontWeight: 850}}>{item}</div>
           ))}
         </div>
-        <div style={{fontSize: 66, fontWeight: 950, letterSpacing: -2}}>codex-claude-effort-router</div>
+        <div style={{fontSize: 66, fontWeight: 950, letterSpacing: -2}}>effort-lanes</div>
         <div style={{fontSize: 30, color: colors.violet, marginTop: 22, fontWeight: 850}}>Open source · MIT · tested evidence included</div>
         <div style={{fontSize: 24, color: colors.muted, marginTop: 30}}>github.com/Jason-hub-star</div>
       </Center>

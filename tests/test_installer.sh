@@ -155,4 +155,30 @@ if PATH="$NO_PYTHON_BIN" /bin/bash "$ROOT/install.sh" --runtimes claude --dry-ru
 fi
 grep -q 'ERROR: python3 is required' "$TMP_ROOT/no-python.err"
 
+NO_NODE_ROOT="$TMP_ROOT/no-node-root"
+NO_NODE_BIN="$TMP_ROOT/no-node-bin"
+mkdir -p "$NO_NODE_BIN"
+ln -s "$(command -v dirname)" "$NO_NODE_BIN/dirname"
+ln -s "$(command -v python3)" "$NO_NODE_BIN/python3"
+if PATH="$NO_NODE_BIN" EFFORT_LANES_HOME="$NO_NODE_ROOT/lanes" EFFORT_LANES_OPENCODE_HOME="$NO_NODE_ROOT/opencode" \
+   /bin/bash "$ROOT/install.sh" --runtimes opencode --dry-run > /dev/null 2> "$TMP_ROOT/no-node.err"; then
+  echo "Expected missing Node to fail" >&2; exit 1
+fi
+grep -q 'ERROR: Node 22 or newer is required' "$TMP_ROOT/no-node.err"
+[[ ! -e "$NO_NODE_ROOT" ]]
+
+OLD_NODE_ROOT="$TMP_ROOT/old-node-root"
+OLD_NODE_BIN="$TMP_ROOT/old-node-bin"
+mkdir -p "$OLD_NODE_BIN"
+ln -s "$(command -v dirname)" "$OLD_NODE_BIN/dirname"
+ln -s "$(command -v python3)" "$OLD_NODE_BIN/python3"
+printf '#!/bin/sh\nprintf "18\\n"\n' > "$OLD_NODE_BIN/node"
+chmod +x "$OLD_NODE_BIN/node"
+if PATH="$OLD_NODE_BIN" EFFORT_LANES_HOME="$OLD_NODE_ROOT/lanes" EFFORT_LANES_OPENCLAW_HOME="$OLD_NODE_ROOT/openclaw" \
+   /bin/bash "$ROOT/install.sh" --runtimes openclaw --dry-run > /dev/null 2> "$TMP_ROOT/old-node.err"; then
+  echo "Expected Node 18 to fail" >&2; exit 1
+fi
+grep -q 'ERROR: Node 22 or newer is required for OpenCode/OpenClaw (found 18)' "$TMP_ROOT/old-node.err"
+[[ ! -e "$OLD_NODE_ROOT" ]]
+
 echo "Installer test OK: five runtimes, shared router, plugin resolution, skill trees, scaffold, preflight, idempotent, fail-open"

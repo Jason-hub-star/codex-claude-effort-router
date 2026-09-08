@@ -2,13 +2,13 @@
 
 코딩 에이전트 런타임 다섯 개(Codex · Claude Code · OpenCode · OpenClaw · Hermes Agent)가 **같은 노력 정책** 하나를 쓰게 하는 라우터와, 하네스를 쓰이는 크기로 유지하는 작업 습관 모음입니다.
 
-프롬프트마다 **fast · daily · deep · critical** 네 차선 중 하나로 분류합니다. 분류기는 의존성 없는 Python 파일 하나이고, Codex·Claude Code에서는 셸 훅으로, OpenCode·OpenClaw·Hermes에서는 얇은 플러그인 뒤에서 같은 파일이 돕니다. 훅이 모델·추론 강도를 바꿀 수 있는 런타임에서는 차선을 **강제**할 수 있고, 아닌 곳에서는 라우팅 힌트만 넣고 그 사실을 숨기지 않습니다.
+다섯 런타임을 오가며 프롬프트별 강도를 결정적으로 통일하고 싶을 때 쓰세요. 완전 자율 에이전트 프레임워크는 아닙니다.
 
-![15초 데모](assets/effort-router-demo.gif)
+프롬프트마다 **fast · daily · deep · critical** 네 차선 중 하나로 분류합니다. 분류기는 의존성 없는 Python 파일 하나이고, Codex·Claude Code에서는 셸 훅으로, OpenCode·OpenClaw·Hermes에서는 얇은 플러그인 뒤에서 같은 파일이 돕니다. 훅이 모델·추론 강도를 바꿀 수 있는 런타임에서는 차선을 **강제**할 수 있고, 아닌 곳에서는 라우팅 힌트만 넣고 그 사실을 숨기지 않습니다.
 
 ## 왜
 
-모든 프롬프트에 최대 추론을 쓰면 느리고 비싸고, 운영 마이그레이션에 최소 추론을 쓰면 사고가 납니다. 대부분은 설정 하나를 고른 뒤 잊습니다. Effort Lanes는 프롬프트 단위로, 결정적으로, 50ms 안에 고르고, 절대 프롬프트를 막지 않습니다(잘못된 입력·설정·라우터 부재 모두 fail-open).
+모든 프롬프트에 최대 추론을 쓰면 느리고 비싸고, 운영 마이그레이션에 최소 추론을 쓰면 사고가 납니다. 대부분은 설정 하나를 고른 뒤 잊습니다. Effort Lanes는 프롬프트 단위로 결정합니다. 잘못된 입력·설정은 라우팅 출력 없이 끝나고, OpenCode·OpenClaw 어댑터는 분류를 2초로 제한해 라우터 실패가 턴을 막지 않게 합니다.
 
 | 차선 | 신호 | 강도 | Codex 기본 | Claude 기본 |
 |---|---|---|---|---|
@@ -24,44 +24,45 @@ A/B 전까지 medium을 유지하며, 아래 low 결과는 OpenCode에서 측정
 
 ## 런타임별로 실제로 바뀌는 것
 
-프롬프트 훅은 실행 중인 세션의 모델을 몰래 바꾸지 못합니다. 아래 표가 전부이며, 각 행은 실제 설치에서 실행해 확인했습니다([증거](docs/evidence/VALIDATION.md)).
+프롬프트 훅은 실행 중인 세션의 모델을 몰래 바꾸지 못합니다. 검증 열은 런타임별로 확보한 가장 강한 증거이며, 한계도 [검증 문서](docs/evidence/VALIDATION.md)에 남깁니다.
 
 | 런타임 | 훅 | 문맥 주입 | 프롬프트별 강도·모델 변경 | 검증 |
 |---|---|---|---|---|
-| Claude Code | `UserPromptSubmit` 셸 훅 | 예 | 아니오 — 차선별 서브에이전트·프로필 제공 | 훅 계약·설치기 |
+| Claude Code | `UserPromptSubmit` 셸 훅 | 예 | 아니오 — 차선별 서브에이전트·프로필 제공 | 훅 계약·설치기·격리된 로컬 마켓 설치 |
 | Codex | `UserPromptSubmit` 셸 훅 | 예 | 아니오 — 다음 세션용 `codex -p effort-deep` | 훅 계약·설치기·빌트인 위임 |
-| **OpenCode** | 플러그인 `chat.message` + `chat.params` | 예 | **예, opt-in** — 호출마다 `reasoningEffort` 지정 | 실행: 모델이 주입된 차선을 그대로 답함 |
-| **OpenClaw** | 플러그인 `before_prompt_build` + `before_model_resolve` | 예 | **예, opt-in** — 차선별 provider/model 교체 | `openclaw plugins doctor` 통과, `before_model_resolve` 실발화 |
+| **OpenCode** | 플러그인 `chat.message` + `chat.params` | 예 | **예, opt-in** — 요청의 `reasoningEffort` 지정 | 실문맥 실행·한 프로바이더 A/B |
+| **OpenClaw** | 플러그인 `before_prompt_build` + `before_model_resolve` | 예 | **예, opt-in** — 차선별 provider/model override 반환 | 로컬 설치·doctor, resolve 훅 관찰, prompt 훅 계약 테스트 |
 | Hermes Agent | 플러그인 `pre_llm_call` 또는 같은 이벤트의 셸 훅 | 예 | 아니오 — 상류 이슈 #23739 / #7273 미해결 | `hermes plugins doctor` OK, `hermes hooks test` 파싱 확인 |
 
 강제는 기본 꺼짐입니다. 세션 중 모델이 바뀌면 프롬프트 캐시가 깨지고 사람이 놀라니, 켜는 건 명시적으로 합니다(전역 설정 `"enforce": {"opencode": true}` / OpenClaw 플러그인 설정 `enforce: true`).
 
-## 1분 설치
+## 빠른 시작
 
-요구: Python 3, Codex/Claude 훅 병합용 `jq`, OpenCode/OpenClaw 플러그인용 Node 22.
+| 선택한 런타임 | 요구사항 |
+|---|---|
+| 공통 | Python 3, Bash/POSIX 환경 |
+| Codex 또는 Claude Code | `jq` |
+| OpenCode 또는 OpenClaw | Node 22 이상 |
 
-Windows에서는 **WSL 2**의 Ubuntu 또는 Debian 배포판 안에서 설치기를 실행하세요. Git Bash,
-PowerShell, 명령 프롬프트는 POSIX 경로와 유틸리티 계약이 달라 지원하지 않습니다. 전체 검사는
-이 WSL 사용자 공간과 같은 깨끗한 Debian 컨테이너에서 회귀하며, Windows 호스트 경로 연동까지
-검증했다고 주장하지 않습니다.
+Windows에서는 **WSL 2** Ubuntu/Debian 안에서 실행하세요. Git Bash, PowerShell, 명령 프롬프트는 지원하지 않습니다.
 
 ```bash
 git clone https://github.com/Jason-hub-star/effort-lanes.git
 cd effort-lanes
 bash install.sh                 # 감지된 모든 런타임, 코어만
-bash install.sh --starter       # + 워크플로 스킬 10종
+bash install.sh --starter       # 선택: 워크플로 스킬 10종 추가
 bash install.sh --runtimes claude,opencode --skills decision-sheet,evidence-audit
 bash install.sh --dry-run
 ```
 
-설치기는 공유 라우터를 `~/.config/effort-lanes/effort_router.py`에 한 벌 두고, 기존 훅을 건드리지 않고 자기 항목만 병합하며, 중복은 정확히 하나로 수렴시키고, 1회성 `*.effort-router.bak` 백업을 만들고, 설정 JSON이 깨져 있으면 쓰기 전에 멈춥니다. 설치 후 열린 세션은 재시작하세요.
+먼저 코어만 설치하고 필요한 스킬만 더하는 편을 권합니다. 설치기는 공유 라우터를 `~/.config/effort-lanes/effort_router.py`에 한 벌 두고, 기존 훅을 건드리지 않고 자기 항목만 병합하며, 중복은 정확히 하나로 수렴시키고, 1회성 `*.effort-router.bak` 백업을 만들고, 런타임 요구사항과 설정 JSON을 쓰기 전에 검사합니다. 설치 후 열린 세션은 재시작하세요.
 
 다른 경로:
 
 - **Claude Code 플러그인 마켓플레이스** — `/plugin marketplace add Jason-hub-star/effort-lanes` → `/plugin install effort-lanes@effort-lanes`
 - **스킬만** — `npx skills add Jason-hub-star/effort-lanes --list`
-- **OpenClaw** — `openclaw plugins install ./openclaw` (CLI가 있으면 설치기가 대신 실행)
-- **Hermes** — 설치기가 플러그인을 복사하고 `hermes plugins enable effort-lanes`를 실행. 프로세스 분리를 원하면 `~/.hermes/config.yaml`에 `hooks.pre_llm_call` 셸 훅으로 같은 라우터를 걸면 됩니다.
+- **OpenClaw** — `openclaw plugins install ./openclaw` (선택하면 설치기가 실행). `plugins.allow`에 `effort-lanes`를 넣고 OpenClaw를 재시작하세요.
+- **Hermes** — 설치기가 플러그인을 복사하고 비대화형으로 `hermes plugins enable effort-lanes`를 실행합니다. Hermes를 재시작하세요. 프로세스 분리를 원하면 `~/.hermes/config.yaml`에 `hooks.pre_llm_call` 셸 훅으로 같은 라우터를 걸면 됩니다.
 
 ## 설정
 
@@ -70,13 +71,22 @@ bash install.sh --dry-run
 ```json
 {
   "floor": "deep",
+  "default_lane": "daily",
   "keywords": { "critical": ["movej", "joint motion"] },
-  "lanes": { "critical": { "opencode": "anthropic/claude-opus-5" } },
+  "lanes": { "critical": { "opencode": "anthropic/claude-opus-5", "openclaw": "anthropic/claude-opus-5" } },
   "enforce": { "opencode": false }
 }
 ```
 
-`floor`는 오판이 비싼 레포(하드웨어·운영 인프라)용입니다. 예시는 [`router/config.example.json`](router/config.example.json).
+`floor`는 오판이 비싼 레포(하드웨어·운영 인프라)용이고, `lanes.<lane>.<runtime>`은 강제 가능한 런타임의 차선별 모델입니다. 예시는 [`router/config.example.json`](router/config.example.json).
+
+필요하면 프롬프트에서 차선을 명시하세요.
+
+```text
+lane=fast 변경된 파일을 나열해줘
+effort-deep 이 변경을 구현하고 테스트해줘
+effort-critical 운영 마이그레이션을 감사해줘
+```
 
 ## 워크플로 스킬 10종
 
@@ -113,13 +123,14 @@ bash scripts/check-docs.sh
 
 ```bash
 bash scripts/check.sh
+python3 router/effort_router.py --classify --json --runtime opencode --prompt "버그를 고치고 테스트해줘"
 ```
 
-프롬프트 32개(한/영)·두 셸 훅 계약·깨진 설정·floor·Node 플러그인 계약 2종·Hermes 플러그인·5런타임 설치기·문서 게이트 파손 테스트 10종을 덮습니다. 실런타임 증거와 기록으로 남긴 실패는 [docs/evidence/VALIDATION.md](docs/evidence/VALIDATION.md).
+프롬프트 47개(한/영)·두 셸 훅 계약·깨진 설정·floor·Node 플러그인 계약 2종·Hermes 플러그인·5런타임 설치기·문서 게이트 파손 테스트 10종을 덮습니다. 실런타임 증거와 기록으로 남긴 실패는 [docs/evidence/VALIDATION.md](docs/evidence/VALIDATION.md).
 
 ## 벤치마크
 
-`bench/`는 같은 과제 15개·같은 모델에서 **노력 선택 방식 한 축만** 바꿔 잽니다. 조건 4개(라우터 없음·항상 high·조언·강제), 에이전트가 못 보는 숨은 검증, 실행 전에 적어둔 예측.
+`bench/`는 같은 과제·같은 모델에서 **노력 선택 방식 한 축만** 바꿔 잽니다. 파일럿 1은 조건 4개였고, 현재 러너는 실험 2의 fast-low 대조군을 포함해 6개입니다. 에이전트가 못 보는 숨은 검증과 실행 전에 봉인한 예측을 씁니다.
 
 파일럿 1(2026-09-08, `opencode-go/gpt-5.6-luna`, 1회 반복 60런): critical 과제에서 `강제`가 `항상 high`와 같은 통과율(5/5)을 4% 싸게 냈고, 라우터 없음 대비 critical 미스 1건을 13% 비용으로 잡았어요. 반면 fast 과제에서는 이 프로바이더에서 라우터가 추론 토큰을 **아끼지 못하고 더 썼고**(46→153), 키워드 표가 짧은 영어 프롬프트 5/15를 놓쳤어요(오프라인 수정 후 15/15). 실패한 예측 둘이 코드와 로드맵을 바꿨어요 — [bench/results/pilot-1.md](bench/results/pilot-1.md).
 
@@ -130,7 +141,7 @@ bash scripts/check.sh
 
 ## 포지셔닝
 
-v0.2까지는 일부러 Codex+Claude 전용의 좁은 라우터였습니다. v0.3에서 훅이 실제로 강도를 바꿀 수 있는 자리를 실측한 뒤 크로스 런타임 하네스로 넓혔습니다. 비교와 배운 점은 [docs/research/COMPARISON.md](docs/research/COMPARISON.md). 유지하는 원칙: 분류기 파일 하나, 라우팅 경로에 LLM 없음, 자동 강제 없음, 모든 기능 주장은 기록된 실행으로 뒷받침.
+v0.2까지는 일부러 Codex+Claude 전용의 좁은 라우터였습니다. v0.3에서 훅이 실제로 강도를 바꿀 수 있는 자리를 실측한 뒤 크로스 런타임 하네스로 넓혔습니다. 비교와 배운 점은 [docs/research/COMPARISON.md](docs/research/COMPARISON.md). 유지하는 원칙: 분류기 파일 하나, 라우팅 경로에 LLM 없음, 자동 강제 없음, 주장마다 증거와 명시적 한계 연결.
 
 ## 안전
 

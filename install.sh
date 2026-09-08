@@ -144,6 +144,14 @@ command -v python3 >/dev/null || { echo "ERROR: python3 is required" >&2; exit 1
 if want codex || want claude; then
   command -v jq >/dev/null || { echo "ERROR: jq is required" >&2; exit 1; }
 fi
+if want opencode || want openclaw; then
+  command -v node >/dev/null || { echo "ERROR: Node 22 or newer is required for OpenCode/OpenClaw" >&2; exit 1; }
+  node_major="$(node -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || true)"
+  [[ "$node_major" =~ ^[0-9]+$ && "$node_major" -ge 22 ]] || {
+    echo "ERROR: Node 22 or newer is required for OpenCode/OpenClaw (found ${node_major:-unknown})" >&2
+    exit 1
+  }
+fi
 
 for home in "$LANES_HOME" "$CODEX_ROOT" "$CLAUDE_ROOT" "$OPENCODE_ROOT" "$HERMES_ROOT"; do
   [[ ! -e "$home" || -d "$home" ]] || { echo "ERROR: runtime home is not a directory: $home" >&2; exit 1; }
@@ -237,7 +245,7 @@ fi
 
 if want claude; then
   install_file "$ROOT/router/effort_router.py" "$CLAUDE_ROOT/hooks/effort-router.py"
-  for source in "$ROOT"/claude/agents/*.md; do install_file "$source" "$CLAUDE_ROOT/agents/$(basename "$source")"; done
+  for source in "$ROOT"/agents/*.md; do install_file "$source" "$CLAUDE_ROOT/agents/$(basename "$source")"; done
   merge_hook "$CLAUDE_ROOT/settings.json" "python3 \"$CLAUDE_ROOT/hooks/effort-router.py\"" claude
   install_skills_into "$CLAUDE_ROOT/skills"
 fi
