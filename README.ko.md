@@ -12,12 +12,15 @@
 
 | 차선 | 신호 | 강도 | Codex 기본 | Claude 기본 |
 |---|---|---|---|---|
-| Fast | 짧은 조회·개수·정렬 | medium | Luna / medium | Haiku / medium |
+| Fast | 짧은 조회·개수·정렬 | low | Luna / medium | Haiku / medium |
 | Daily | 조사·검토·설명 | medium | Terra / medium | Sonnet / medium |
 | Deep | 구현·리팩터·디버그·E2E | high | Sol / high | Sonnet / high |
 | Critical | 보안·운영·결제·안전·반복 실패 | high | Astra / high | Opus / high |
 
 안전 신호가 최우선입니다(`lane=fast audit security`도 Critical). 명시 요청(`lane=deep`, `effort-fast`)이 키워드보다 우선하고, 프로젝트 floor는 차선을 올릴 수만 있습니다.
+
+강도 열은 프롬프트별 강제를 지원하는 런타임이 쓰는 값입니다. Codex·Claude 프로필은 자체 작업량
+A/B 전까지 medium을 유지하며, 아래 low 결과는 OpenCode에서 측정했습니다.
 
 ## 런타임별로 실제로 바뀌는 것
 
@@ -119,6 +122,11 @@ bash scripts/check.sh
 `bench/`는 같은 과제 15개·같은 모델에서 **노력 선택 방식 한 축만** 바꿔 잽니다. 조건 4개(라우터 없음·항상 high·조언·강제), 에이전트가 못 보는 숨은 검증, 실행 전에 적어둔 예측.
 
 파일럿 1(2026-09-08, `opencode-go/gpt-5.6-luna`, 1회 반복 60런): critical 과제에서 `강제`가 `항상 high`와 같은 통과율(5/5)을 4% 싸게 냈고, 라우터 없음 대비 critical 미스 1건을 13% 비용으로 잡았어요. 반면 fast 과제에서는 이 프로바이더에서 라우터가 추론 토큰을 **아끼지 못하고 더 썼고**(46→153), 키워드 표가 짧은 영어 프롬프트 5/15를 놓쳤어요(오프라인 수정 후 15/15). 실패한 예측 둘이 코드와 로드맵을 바꿨어요 — [bench/results/pilot-1.md](bench/results/pilot-1.md).
+
+실험 2는 fast 강도만 분리해 5과제×5조건×3회, 75/75를 통과했습니다. `enforce-low`는 기존
+`enforce=medium`보다 평균 추론 토큰을 60.3→30.3(-49.8%)으로 줄이고 통과율 15/15를 유지해,
+봉인 규칙에 따라 fast 프롬프트별 기본값을 `low`로 바꿨습니다. 총비용 차이는 -1.9%였고 한
+프로바이더의 결과이므로 모든 모델로 일반화하지 않습니다 — [실험 2](bench/results/exp2-fastlane-20260908.md).
 
 ## 포지셔닝
 

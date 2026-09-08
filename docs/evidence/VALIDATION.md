@@ -43,6 +43,25 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 | P2 critical pass rate does not drop under enforce | PASS — 5/5, matching always-high, 4% cheaper |
 | P3 ≥85% of tasks routed to the labeled lane | FAIL at 10/15; keyword fix and precedence rule brought the offline check to 15/15 and 47 matrix cases pass |
 
+## Benchmark experiment 2 (2026-09-08)
+
+After an unchanged `opencode-go/gpt-5.6-luna` access smoke returned `OK`, the sealed fast-lane
+experiment ran 5 tasks × 5 conditions × 3 repeats. All 75 rows passed with no timeout, fatal provider
+error, or malformed event stream.
+
+| Condition | Pass | Mean reasoning | Total cost | Median wall |
+|---|---:|---:|---:|---:|
+| none | 15/15 | 46.3 | $0.09519 | 9.3 s |
+| always-low | 15/15 | 32.7 | $0.09475 | 8.2 s |
+| advisory | 15/15 | 53.4 | $0.09993 | 8.7 s |
+| enforce (medium) | 15/15 | 60.3 | $0.10076 | 8.7 s |
+| enforce-low | 15/15 | 30.3 | $0.09882 | 7.9 s |
+
+The pre-sealed rule selected Case A: `enforce-low` reduced mean reasoning 49.8% with no pass loss,
+so the fast per-prompt effort default changed from `medium` to `low`. Total cost fell 1.9%; the result
+does not establish a universal saving outside this model, provider, fixture, and day. Raw evidence and
+the full interpretation are in `bench/results/exp2-fastlane-20260908.jsonl` and `.md`.
+
 ## Failures kept as evidence
 
 1. (v0.1) The first live large-task trial selected Critical and attempted a custom Codex agent that the running CLI reported unavailable; built-in fallback agents worked. Automatic hints now use built-in roles.
@@ -54,6 +73,7 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 7. (bench) The first pilot was stopped at 4/60 because this machine's personal global config (default lane deep) leaked into the runs. The router gained `EFFORT_LANES_CONFIG` so the benchmark isolates itself; the 4 contaminated rows were discarded.
 8. (bench) Prediction P1 failed: on `gpt-5.6-luna` the fast lane's `reasoningEffort=medium` and the injected guidance both cost more reasoning than the provider default. Recorded as a hypothesis for the next single-axis run, not patched on the same data.
 9. (platform) A clean Ubuntu 24.04 container with its default Node 18 passed the Python tests but failed loading the installed OpenCode ESM plugin. Repeating the same source and checks with Node 22 passed, so Node 22 is now an explicit prerequisite rather than a guessed compatibility floor.
+10. (bench) Experiment 2 first produced 30 unusable HTTP 401 rows. After a separate one-task access smoke succeeded, the original conditions and model were resumed in a new file; blocked rows remain excluded.
 
 ## What this does not prove
 

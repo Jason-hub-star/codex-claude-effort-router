@@ -17,12 +17,15 @@ Maximum reasoning on every prompt is slow and expensive. Minimum reasoning on a 
 
 | Lane | Signal | Effort | Codex default | Claude default |
 |---|---|---|---|---|
-| Fast | short exact lookups, counts, formatting | medium | Luna / medium | Haiku / medium |
+| Fast | short exact lookups, counts, formatting | low | Luna / medium | Haiku / medium |
 | Daily | research, review, explanation | medium | Terra / medium | Sonnet / medium |
 | Deep | implement, refactor, debug, end-to-end | high | Sol / high | Sonnet / high |
 | Critical | security, production, payments, safety, repeated failure | high | Astra / high | Opus / high |
 
 Safety signals win over everything: `lane=fast audit security` still routes to Critical. Explicit lane requests (`lane=deep`, `effort-fast`) win over keyword matching. A project floor can raise but never lower a lane.
+
+The effort column is the per-prompt value used by runtimes that can enforce it. Codex and Claude
+profiles remain at medium until they have their own workload A/B; the low result below is from OpenCode.
 
 ## What actually changes per runtime
 
@@ -157,6 +160,12 @@ Pilot 1 (2026-09-08, `opencode-go/gpt-5.6-luna`, one repeat, 60 runs):
 | Keyword tables missed short English prompts before the fix | 10/15 → 15/15 offline after |
 
 Two predictions failed and both changed the code or the roadmap; the table, the failures, and the next single-axis experiment are in [bench/results/pilot-1.md](bench/results/pilot-1.md).
+
+Experiment 2 then isolated the fast effort setting: 5 tasks × 5 conditions × 3 repeats, 75/75 passed.
+`enforce-low` cut mean reasoning tokens from 60.3 to 30.3 versus the previous `enforce=medium`
+(-49.8%) with no pass loss, so the sealed rule changed the fast per-prompt default to `low`. Total
+cost moved only -1.9%; this is one provider and not a universal model claim. See
+[experiment 2](bench/results/exp2-fastlane-20260908.md).
 
 ```bash
 python3 bench/run.py route                       # offline: does each task reach its labeled lane?

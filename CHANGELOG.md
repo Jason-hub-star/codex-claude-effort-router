@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fast lane default effort is now `low`. In the sealed 75-run experiment, `enforce-low` kept 15/15 passes while reducing mean reasoning tokens 49.8% versus `enforce=medium`; total cost changed -1.9%. Codex and Claude profile targets remain medium because the result covers one OpenCode provider.
 - Benchmark (`bench/`): fixture with seeded defects, 15 tasks with hidden checks, four routing conditions, predictions before runs, offline `route` check. Pilot 1 results and two failed predictions recorded in `bench/results/pilot-1.md`.
 - Router: `EFFORT_LANES_CONFIG` relocates the global config; fast keywords `how many`, `which file`, `what is the`; deep keywords for bug reports and "add a test"; a short typo request is fast even when it says "fix". Matrix grew to 47 cases.
 - Platform boundary: Windows is supported through WSL 2 Ubuntu/Debian with Node 22, Python 3, `jq`, and Bash. Git Bash, PowerShell, and Command Prompt are explicitly unsupported. Added a reproducible clean-container regression.

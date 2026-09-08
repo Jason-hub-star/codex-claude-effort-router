@@ -47,7 +47,7 @@ class RouterTests(unittest.TestCase):
         output = MODULE.hook(payload)
         self.assertEqual(output["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
         self.assertIn("lane=FAST", output["hookSpecificOutput"]["additionalContext"])
-        self.assertIn("effort=medium", output["hookSpecificOutput"]["additionalContext"])
+        self.assertIn("effort=low", output["hookSpecificOutput"]["additionalContext"])
         self.assertIsNone(MODULE.hook({"hook_event_name": "Stop"}))
 
     def test_hermes_shell_hook_contract(self):

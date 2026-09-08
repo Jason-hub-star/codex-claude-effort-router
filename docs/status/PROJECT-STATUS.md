@@ -4,7 +4,7 @@
 - v0.3.0 shipped 2026-09-08: five runtimes, ten skills, docs gate. Decision sheet archived under `docs/archive/`.
 
 ## Next action
-- Benchmark experiment 2 resumed unchanged after a successful one-task OpenCode Go access smoke. Apply the sealed decision rule only to the new 75-row result; the earlier 30 provider-failure rows remain excluded.
+- Complete the README SSOT truth pass and run the actual WSL 2 fresh-clone gate before a patch release. Experiment 2 is decided; do not rerun it to tune the same result.
 
 ## Open decisions
 - none
@@ -23,3 +23,4 @@
 | 2026-09-08 | Benchmark experiment 2 stopped before evidence: 30/30 attempts hit unretryable OpenCode Go HTTP 401; runner now aborts account failures after one row | `bench/results/exp2-fastlane-BLOCKED.jsonl` |
 | 2026-09-08 | Windows boundary fixed at WSL 2 Ubuntu/Debian; Git Bash/PowerShell/CMD unsupported. Clean Debian 12 + Node 22 full suite passed; Node 18 failure retained | `tests/test_wsl_container.sh`, `docs/evidence/VALIDATION.md` |
 | 2026-09-08 | OpenCode Go access restored: a pure `gpt-5.6-luna` smoke returned exactly `OK` in 5.3 s at $0.00528; sealed 75-run experiment 2 approved to resume without changing model or conditions | live OpenCode JSON event stream; `docs/goals/GOAL-fast-lane-effort.md` |
+| 2026-09-08 | Experiment 2 completed 75/75 without errors. `enforce-low` cut mean reasoning 60.3→30.3 (-49.8%) versus medium with equal 15/15 pass rate; sealed Case A changed only the fast per-prompt effort default to low | `bench/results/exp2-fastlane-20260908.{jsonl,md}` |

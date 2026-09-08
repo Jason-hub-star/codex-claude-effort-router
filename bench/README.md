@@ -29,6 +29,15 @@ If the router earns its place, these hold. If they do not, the router is not wor
 
 Expected non-results, stated up front: on fast/daily tasks `enforce` should look like `none` (both medium); on deep/critical tasks `enforce` should look like `always-high`. `advisory` differs from `none` only by the injected context, so any token difference there is context cost, not routing.
 
+## Experiment 2 result — fast default decided
+
+The sealed 75-run experiment completed on 2026-09-08: 5 fast tasks × 5 conditions × 3 repeats,
+75/75 passed. `enforce-low` reduced mean reasoning from 60.3 to 30.3 tokens (-49.8%) versus the
+then-current `enforce=medium`, with equal 15/15 pass rates. Case A changed the product's fast
+per-prompt default to `low`; Codex and Claude profile targets remain medium because this experiment
+covered one OpenCode provider. `enforce-low` remains in the runner as the historical experiment
+condition and is now equivalent to the product default. See `results/exp2-fastlane-20260908.md`.
+
 ## What this does not measure
 
 Other harnesses' skills, long multi-turn sessions, models that ignore `reasoningEffort`, or Codex/Claude Code (where the hook is advisory by design). Results are one machine, one model version, one day; the results file records all three.

@@ -34,7 +34,7 @@ class Route:
 # Lane -> effort level plus per-runtime starting points. These are defaults, not benchmarks.
 LANES: dict[str, dict[str, str]] = {
     "fast": {
-        "effort": "medium",
+        "effort": "low",
         "codex": "Luna/medium", "codex_agent": "explorer",
         "claude": "Haiku/medium", "claude_agent": "effort-fast",
     },
