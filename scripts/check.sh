@@ -26,9 +26,12 @@ for file in \
   openclaw/index.js openclaw/openclaw.plugin.json openclaw/package.json \
   hermes/effort-lanes/__init__.py hermes/effort-lanes/plugin.yaml \
   scaffold/scripts/check-docs.sh scaffold/docs/INDEX.md scaffold/docs/status/DOC-SYNC-MATRIX.md \
-  .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
+  .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json tests/test_wsl_container.sh; do
   test -f "$ROOT/$file"
 done
+grep -q 'WSL 2' "$ROOT/README.md"
+grep -q 'Git Bash, PowerShell, and Command Prompt are not supported' "$ROOT/README.md"
+grep -q 'WSL 2' "$ROOT/README.ko.md"
 for json in router/config.example.json opencode/package.json openclaw/openclaw.plugin.json openclaw/package.json \
   .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json; do
   jq -e . "$ROOT/$json" >/dev/null

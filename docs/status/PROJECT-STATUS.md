@@ -21,3 +21,4 @@
 | 2026-09-08 | Phase 7 installer for five runtimes, manifests, README, rename to effort-lanes, v0.3.0 | `bash scripts/check.sh` |
 | 2026-09-08 | Benchmark pilot 1 (60 runs): P2 pass, P1/P3 fail; routing gaps fixed offline 15/15 | `bench/results/pilot-1.md` |
 | 2026-09-08 | Benchmark experiment 2 stopped before evidence: 30/30 attempts hit unretryable OpenCode Go HTTP 401; runner now aborts account failures after one row | `bench/results/exp2-fastlane-BLOCKED.jsonl` |
+| 2026-09-08 | Windows boundary fixed at WSL 2 Ubuntu/Debian; Git Bash/PowerShell/CMD unsupported. Clean Debian 12 + Node 22 full suite passed; Node 18 failure retained | `tests/test_wsl_container.sh`, `docs/evidence/VALIDATION.md` |

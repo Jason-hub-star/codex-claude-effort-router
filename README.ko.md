@@ -35,7 +35,12 @@
 
 ## 1분 설치
 
-요구: Python 3, Codex/Claude 훅 병합용 `jq`, OpenCode/OpenClaw 플러그인용 Node.
+요구: Python 3, Codex/Claude 훅 병합용 `jq`, OpenCode/OpenClaw 플러그인용 Node 22.
+
+Windows에서는 **WSL 2**의 Ubuntu 또는 Debian 배포판 안에서 설치기를 실행하세요. Git Bash,
+PowerShell, 명령 프롬프트는 POSIX 경로와 유틸리티 계약이 달라 지원하지 않습니다. 전체 검사는
+이 WSL 사용자 공간과 같은 깨끗한 Debian 컨테이너에서 회귀하며, Windows 호스트 경로 연동까지
+검증했다고 주장하지 않습니다.
 
 ```bash
 git clone https://github.com/Jason-hub-star/effort-lanes.git

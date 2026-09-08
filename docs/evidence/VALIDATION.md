@@ -17,6 +17,7 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 | Hermes plugin contract | PASS | `register` binds `pre_llm_call`; context injected; empty message and missing router return `None` |
 | Harness audit script | PASS | fixture project: ALIVE/LINKED/DEAD verdicts, archived skills excluded, subdirectory sessions counted, idle project flagged |
 | Installer | PASS | five runtime homes, shared router, installed OpenCode plugin resolves it without env, skill trees copied whole, scaffold never overwrites, unknown skill/runtime and malformed settings abort before any write, idempotent, paths with spaces |
+| WSL userland boundary | PASS | current branch copied into a clean `node:22-bookworm-slim` container; Debian 12, Bash 5.2, Python 3.11, Node 22.23 ran all 28 tests, plugin contracts, five-runtime installer, and docs gates |
 | Docs gate | PASS | ten break tests; the gate also runs on this repository and the scaffold copy must be byte-identical |
 | Skill schemas | PASS | ten `SKILL.md` folders: frontmatter, `## Next` baton, no TODO, single-line `metadata` rule for OpenClaw |
 
@@ -52,6 +53,7 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 6. (v0.3) The docs gate, on its first run against this repository, failed on a real stray file in `docs/`. It was moved, not whitelisted.
 7. (bench) The first pilot was stopped at 4/60 because this machine's personal global config (default lane deep) leaked into the runs. The router gained `EFFORT_LANES_CONFIG` so the benchmark isolates itself; the 4 contaminated rows were discarded.
 8. (bench) Prediction P1 failed: on `gpt-5.6-luna` the fast lane's `reasoningEffort=medium` and the injected guidance both cost more reasoning than the provider default. Recorded as a hypothesis for the next single-axis run, not patched on the same data.
+9. (platform) A clean Ubuntu 24.04 container with its default Node 18 passed the Python tests but failed loading the installed OpenCode ESM plugin. Repeating the same source and checks with Node 22 passed, so Node 22 is now an explicit prerequisite rather than a guessed compatibility floor.
 
 ## What this does not prove
 
@@ -60,5 +62,6 @@ Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 - That OpenClaw's `before_prompt_build` injects in a live turn on this machine; no model credentials were available. The hook type and return shape were verified from the SDK typings and in plain Node.
 - That the Claude Code marketplace install path works end to end; the manifests follow the documented schema but were not exercised through `/plugin install`.
 - That any provider changes its reasoning when OpenCode passes `reasoningEffort`; only that the call is accepted.
+- That native Git Bash, PowerShell, Command Prompt, or Windows-host path interoperability works. The supported Windows boundary is the Linux userland inside WSL 2.
 
 Future measurements should record task fixture, model version, effort, wall time, token use, pass/fail rubric, and repeated trials.

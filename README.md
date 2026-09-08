@@ -40,7 +40,12 @@ Enforcement is off by default. Switching models mid-session invalidates prompt c
 
 ## Install in one minute
 
-Requirements: Python 3, `jq` for the Codex/Claude hook merge, Node for the OpenCode/OpenClaw plugins.
+Requirements: Python 3, `jq` for the Codex/Claude hook merge, and Node 22 for the OpenCode/OpenClaw plugins.
+
+On Windows, use **WSL 2** with an Ubuntu or Debian distribution and run the installer inside that
+Linux environment. Git Bash, PowerShell, and Command Prompt are not supported: the installer relies
+on POSIX paths and utilities. The full suite is regression-tested in a clean Debian container that
+matches this WSL userland boundary; Windows-host path interoperability is not claimed.
 
 ```bash
 git clone https://github.com/Jason-hub-star/effort-lanes.git
