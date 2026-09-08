@@ -20,7 +20,7 @@ for file in \
   docs/research/COMPARISON.md docs/research/INSTALL-UX-RESEARCH.ko.md docs/research/VIDEO-ASSESSMENT.ko.md \
   docs/ref/diagrams/effort-routing.workflow.json docs/ref/diagrams/effort-routing.html \
   docs/ref/diagrams/starter-workflow.lifecycle.json docs/ref/diagrams/starter-workflow.html \
-  docs/evidence/VALIDATION.md assets/effort-routing.svg assets/starter-workflow.svg assets/effort-router-demo.mp4 \
+  docs/evidence/VALIDATION.md docs/evidence/CONTEXT-MANAGEMENT.md assets/effort-routing.svg assets/starter-workflow.svg assets/effort-router-demo.mp4 \
   router/effort_router.py router/config.example.json install.sh \
   opencode/effort-lanes.js opencode/package.json \
   openclaw/index.js openclaw/openclaw.plugin.json openclaw/package.json \
@@ -84,5 +84,12 @@ grep -q "$case_count routing cases" "$ROOT/promo/remotion/src/root.tsx"
 grep -q '>effort-lanes</div>' "$ROOT/promo/remotion/src/root.tsx"
 ! grep -Eq '200-line|under 50 ms|effort-router-demo\.(gif|mp4)' "$ROOT/README.md"
 ! grep -Eq '50ms 안|effort-router-demo\.(gif|mp4)' "$ROOT/README.ko.md"
+grep -q 'Input + cache read' "$ROOT/README.md"
+grep -q '입력+캐시 읽기' "$ROOT/README.ko.md"
+for value in '-6.2%' '-11.7%' '-49.8%' '-1.9%' '+17.7%' '+15.4%' '-34.7%' '+3.8%'; do
+  grep -Fq -- "$value" "$ROOT/README.md"
+  grep -Fq -- "$value" "$ROOT/README.ko.md"
+done
+grep -q 'No automatic finish hook was added' "$ROOT/docs/evidence/VALIDATION.md"
 
 echo "Repository checks passed."

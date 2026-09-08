@@ -17,6 +17,19 @@ file contains provider failures only and is not part of this result.
 All 30 plugin-routed rows agreed with the fast label. There were no timeouts, fatal provider errors,
 or verification failures. The matrix cost $0.48945 and used 752.9 seconds of summed wall time.
 
+### Whole-run counters people actually feel
+
+The provider reports input, cache-read, output, and reasoning separately, so the table does not hide
+everything behind the reasoning-only headline.
+
+| Comparison, 15 runs per side | Input + cache read | Output | Reasoning | Cost | Median wall |
+|---|---:|---:|---:|---:|---:|
+| `enforce=medium` → `enforce-low` | 665,839 → 624,749 (**-6.2%**) | 2,839 → 2,508 (**-11.7%**) | 905 → 454 (**-49.8%**) | $0.10076 → $0.09882 (**-1.9%**) | 8.7 s → 7.9 s (**-9.2%**) |
+| no router → `enforce-low` | 530,703 → 624,749 (**+17.7%**) | 2,174 → 2,508 (**+15.4%**) | 695 → 454 (**-34.7%**) | $0.09519 → $0.09882 (**+3.8%**) | 9.3 s → 7.9 s (**-15.1%**) |
+
+Every side passed 15/15. The low change improved the previous harness setting, but the harness did not
+beat no router on input usage or cost in this fixture. Context injection is measurable overhead.
+
 ## Sealed decision
 
 **Case A applies.** `enforce-low` reasoning was 49.8% lower than `enforce=medium`, and both passed

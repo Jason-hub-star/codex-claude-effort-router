@@ -11,6 +11,17 @@ Use this when you work across these runtimes and want one deterministic per-prom
 
 Every prompt is classified into one of four lanes — **fast, daily, deep, critical** — by a single stdlib-only Python file. The same file runs as a shell hook in Codex and Claude Code, and behind thin plugins in OpenCode, OpenClaw, and Hermes Agent. Where a runtime lets a hook change the model or reasoning effort, Effort Lanes can enforce the lane; everywhere else it injects a routing hint and says so.
 
+## Measured impact, including the loss
+
+This is the result people usually want first. Experiment 2 ran the same five fast tasks three times per condition on `opencode-go/gpt-5.6-luna`; every compared run passed its hidden check. Negative numbers mean less usage.
+
+| Change, 15 runs per side | Pass rate | Input + cache read | Output | Reasoning | Cost |
+|---|---:|---:|---:|---:|---:|
+| Same harness: `medium` → `low` | 15/15 → 15/15 | **-6.2%** | **-11.7%** | **-49.8%** | **-1.9%** |
+| No router → enforced `low` harness | 15/15 → 15/15 | **+17.7%** | **+15.4%** | **-34.7%** | **+3.8%** |
+
+So the low setting improved the previous harness configuration, but this small fast-task fixture did **not** beat no router on total usage or cost: injected context has a price. The raw 75 rows, sealed decision rule, exact totals, and limits are in [experiment 2](bench/results/exp2-fastlane-20260908.md). Do not market the reasoning reduction as a 50% bill cut.
+
 ## Why
 
 Maximum reasoning on every prompt is slow and expensive. Minimum reasoning on a production migration is how incidents start. Most people pick one setting and leave it. Effort Lanes makes the choice per prompt, deterministically. Malformed input or config emits no routing output, and the OpenCode/OpenClaw adapters cap classification at two seconds so a router failure does not block the turn.
@@ -122,6 +133,18 @@ morning-brief → aim-before-build → decision-sheet? → converge-plan? → go
 - `agent-starter` — points a new coding-agent user at exactly one appropriate workflow stage.
 
 Full table and install options in [skills/README.md](skills/README.md).
+
+## Compact, clear, or keep going?
+
+Effort Lanes does not auto-compact or auto-clear at “finish.” Compaction costs a summarization pass and only pays back if the same thread continues; clearing an unrelated task is cheaper and cleaner but discards conversational detail.
+
+| Next work | Recommended action |
+|---|---|
+| Same feature, context still healthy | Keep going; let the runtime manage its window |
+| Same feature, context is crowded | Persist the checkpoint, then compact with a focus on decisions, evidence, blockers, and the next action |
+| Different feature | Persist the checkpoint, then `/clear` in Claude Code or start a new Codex thread |
+
+Claude Code already auto-compacts near its limit and exposes manual `/compact`, `/clear`, and compact lifecycle hooks. Local Codex logs also show real compaction reducing the next-call input substantially, but exact fact retention was not graded. The measured sample, trigger conditions, and why no close hook was added are in [context-management evidence](docs/evidence/CONTEXT-MANAGEMENT.md).
 
 ## Docs gate and scaffold
 

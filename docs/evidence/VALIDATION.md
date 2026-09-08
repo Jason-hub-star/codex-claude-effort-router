@@ -63,6 +63,20 @@ so the fast per-prompt effort default changed from `medium` to `low`. Total cost
 does not establish a universal saving outside this model, provider, fixture, and day. Raw evidence and
 the full interpretation are in `bench/results/exp2-fastlane-20260908.jsonl` and `.md`.
 
+Across the 15 `enforce=medium` and 15 `enforce-low` rows, input plus cache-read counters fell 6.2%,
+output fell 11.7%, reasoning fell 49.8%, cost fell 1.9%, and median wall time fell 9.2%. Against no
+router, however, `enforce-low` used 17.7% more input plus cache-read and cost 3.8% more. All sides
+passed 15/15. This is why the README exposes both comparisons instead of a reasoning-only headline.
+
+## Context compaction assessment (2026-09-08)
+
+No automatic finish hook was added. Claude Code already has auto/manual compact and clear boundaries.
+In one private Codex thread, nine compact events reduced median next-call input from 228,079 to 23,392
+tokens (-89.7%), and all nine next tasks completed without a recorded error. The events do not label
+manual versus automatic triggers, the transcript stays private, fact retention was not graded, and no
+billing reduction is claimed. Method, limits, and the compact/clear decision rule are in
+`docs/evidence/CONTEXT-MANAGEMENT.md`.
+
 ## Failures kept as evidence
 
 1. (v0.1) The first live large-task trial selected Critical and attempted a custom Codex agent that the running CLI reported unavailable; built-in fallback agents worked. Automatic hints now use built-in roles.

@@ -174,6 +174,24 @@ class BenchTests(unittest.TestCase):
         data = json.loads(RUN.config_content("opencode-go/gpt-5.6-luna", "high"))
         self.assertEqual(data["provider"]["opencode-go"]["models"]["gpt-5.6-luna"]["options"]["reasoningEffort"], "high")
 
+    def test_published_exp2_headline_matches_raw_rows(self):
+        path = ROOT / "bench" / "results" / "exp2-fastlane-20260908.jsonl"
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+        def totals(condition):
+            group = [row for row in rows if row["condition"] == condition]
+            self.assertEqual((len(group), sum(row["pass"] for row in group)), (15, 15))
+            result = {
+                key: sum(row["tokens"][key] for row in group)
+                for key in ("input", "cache_read", "output", "reasoning")
+            }
+            result["cost"] = round(sum(row["cost"] for row in group), 5)
+            return result
+
+        self.assertEqual(totals("none"), {"input": 120, "cache_read": 530583, "output": 2174, "reasoning": 695, "cost": 0.09519})
+        self.assertEqual(totals("enforce"), {"input": 138, "cache_read": 665701, "output": 2839, "reasoning": 905, "cost": 0.10076})
+        self.assertEqual(totals("enforce-low"), {"input": 132, "cache_read": 624617, "output": 2508, "reasoning": 454, "cost": 0.09882})
+
 
 if __name__ == "__main__":
     unittest.main()
