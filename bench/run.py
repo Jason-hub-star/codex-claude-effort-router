@@ -3,9 +3,11 @@
 
 Conditions
   none         OpenCode with external plugins disabled (--pure); provider default effort
+  always-low   --pure plus reasoningEffort=low on every call
   always-high  --pure plus reasoningEffort=high on every call (OPENCODE_CONFIG_CONTENT)
   advisory     effort-lanes plugin loaded, enforcement off (context injection only)
   enforce      effort-lanes plugin loaded, EFFORT_LANES_ENFORCE=1 (reasoningEffort per lane)
+  enforce-low  enforce plus a config override that changes only the fast lane to low
 
 Each run copies the fixture into a fresh temp directory, runs `opencode run --format json`,
 sums step tokens/cost from the event stream, then executes verify/<task>.py against the
@@ -48,6 +50,26 @@ CONDITIONS = {
 def config_content(model: str, effort: str) -> str:
     provider, model_id = model.split("/", 1)
     return json.dumps({"provider": {provider: {"models": {model_id: {"options": {"reasoningEffort": effort}}}}}})
+
+
+FATAL_STATUS = (401, 402, 403)
+
+
+def fatal_error(out: str) -> str | None:
+    """An account-level provider failure: retrying the other 74 runs cannot help."""
+    for line in out.splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        if event.get("type") != "error":
+            continue
+        data = (event.get("error") or {}).get("data") or {}
+        if data.get("statusCode") in FATAL_STATUS:
+            return f"HTTP {data['statusCode']}: {str(data.get('message', ''))[:200]}"
+    return None
 
 
 def parse_events(out: str) -> tuple[dict, float, int, str, int]:
@@ -155,6 +177,7 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
     out = run_log.read_text(errors="ignore")
 
     tokens, cost, steps, answer, errors = parse_events(out)
+    fatal = fatal_error(out)
     answer_file = work / ".bench_answer.txt"
     answer_file.write_text(answer)
     verify = subprocess.run(
@@ -168,7 +191,8 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
         "condition": cond, "model": model, "pass": verify.returncode == 0 and not timed_out,
         "verify": (verify.stdout + verify.stderr).strip()[-160:],
         "tokens": tokens, "cost": round(cost, 5), "wall_s": round(wall, 1), "steps": steps,
-        "errors": errors, "timed_out": timed_out, "workdir": str(work), "time": int(started),
+        "errors": errors, "timed_out": timed_out, "fatal": fatal, "log": str(run_log),
+        "workdir": str(work), "time": int(started),
     }
 
 
@@ -197,6 +221,11 @@ def cmd_run(args: argparse.Namespace) -> int:
                     fh.write(json.dumps(row, ensure_ascii=False) + "\n")
                     fh.flush()
                     done += 1
+                    if row["fatal"]:
+                        print(f"ABORT after {done} run(s): {row['fatal']}", file=sys.stderr)
+                        print(f"  runtime log: {row['log']}", file=sys.stderr)
+                        print(f"results: {out}")
+                        return 2
                     print(f"[{done}/{total}] {task['id']:3} {cond:12} pass={row['pass']!s:5} lane={row['lane_routed']} "
                           f"in={row['tokens']['input']}+cache{row['tokens']['cache_read']} out={row['tokens']['output']} reason={row['tokens']['reasoning']} "
                           f"effort={row['effort_applied']} cost={row['cost']} wall={row['wall_s']}s", flush=True)
@@ -211,17 +240,17 @@ def mean(values: list[float]) -> float:
 def load_rows(path: str) -> tuple[list[dict], int]:
     """Rows usable for comparison, plus how many were dropped as infrastructure failures."""
     all_rows = [json.loads(l) for l in Path(path).read_text().splitlines() if l.strip()]
-    rows = [r for r in all_rows if not r.get("timed_out")]
+    rows = [r for r in all_rows if not r.get("timed_out") and not r.get("fatal")]
     return rows, len(all_rows) - len(rows)
 
 
 def cmd_summarize(args: argparse.Namespace) -> int:
     rows, dropped = load_rows(args.file)
-    if not rows:
-        print("no rows")
-        return 1
     if dropped:
-        print(f"note: {dropped} timed-out run(s) excluded as infrastructure failures\n")
+        print(f"note: {dropped} run(s) excluded as infrastructure failures (timeout or provider error)\n")
+    if not rows:
+        print("no usable rows")
+        return 1
     conds = [c for c in CONDITIONS if any(r["condition"] == c for r in rows)]
     print(f"model: {sorted({r['model'] for r in rows})}  rows: {len(rows)}\n")
     print("| lane | condition | n | pass | input+cache | output | reasoning | cost $ | wall s |")
@@ -297,7 +326,7 @@ def cmd_decide(args: argparse.Namespace) -> int:
     """
     rows, dropped = load_rows(args.file)
     if dropped:
-        print(f"note: {dropped} timed-out run(s) excluded as infrastructure failures\n")
+        print(f"note: {dropped} run(s) excluded as infrastructure failures (timeout or provider error)\n")
     fast = [r for r in rows if r["lane_expected"] == "fast"]
     if not fast:
         print("no fast-lane rows")

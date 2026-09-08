@@ -10,6 +10,8 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("bench_run", ROOT / "bench" / "run.py")
@@ -140,6 +142,31 @@ class BenchTests(unittest.TestCase):
         good = {"lane_expected": "fast", "condition": "enforce", "pass": True, "tokens": {"reasoning": 10}}
         bad = {**good, "timed_out": True}
         path.write_text("\n".join(json.dumps(r) for r in (good, bad, good)))
+        rows, dropped = RUN.load_rows(str(path))
+        self.assertEqual((len(rows), dropped), (2, 1))
+
+    def test_a_blocked_account_aborts_the_matrix_instead_of_burning_it(self):
+        blocked = json.dumps({"type": "error", "error": {"data": {"statusCode": 401, "message": "account blocked"}}})
+        self.assertIn("HTTP 401", RUN.fatal_error(blocked))
+        self.assertIsNone(RUN.fatal_error(json.dumps({"type": "error", "error": {"data": {"statusCode": 500}}})),
+                          "a server error is retryable, not fatal")
+        self.assertIsNone(RUN.fatal_error("noise\n" + json.dumps({"type": "text", "part": {}})))
+
+        out = Path(tempfile.mkdtemp()) / "blocked.jsonl"
+        args = SimpleNamespace(tasks="F1,F2", conditions="none", repeat=3, out=str(out),
+                               model="provider/model", timeout=1)
+        fatal_row = {"fatal": "HTTP 401: account blocked", "log": "/tmp/runtime.log"}
+        with mock.patch.object(RUN, "run_one", return_value=fatal_row) as run_one, \
+             mock.patch("builtins.print"):
+            self.assertEqual(RUN.cmd_run(args), 2)
+        self.assertEqual(run_one.call_count, 1, "a fatal account error must stop the remaining matrix")
+        self.assertEqual(len(out.read_text().splitlines()), 1)
+
+    def test_fatal_rows_are_excluded_from_comparisons(self):
+        work = Path(tempfile.mkdtemp())
+        path = work / "r.jsonl"
+        good = {"lane_expected": "fast", "condition": "enforce", "pass": True, "tokens": {"reasoning": 10}}
+        path.write_text("\n".join(json.dumps(r) for r in (good, {**good, "fatal": "HTTP 401: x"}, good)))
         rows, dropped = RUN.load_rows(str(path))
         self.assertEqual((len(rows), dropped), (2, 1))
 

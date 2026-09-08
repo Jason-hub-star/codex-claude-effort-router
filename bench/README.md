@@ -6,13 +6,14 @@ Same tasks, same model, one axis changed: how the prompt's effort is chosen. Num
 
 - **Fixture:** `fixtures/todo`, a 7-file Python project with seeded defects (wrong date math, missing guard, hardcoded secret, path traversal, SQL injection, world-readable store).
 - **Tasks:** `tasks.json`, 15 prompts — 5 fast (lookups, a typo), 5 deep (fix, implement, refactor), 5 critical (security fixes). Each has a hidden check in `verify/<id>.py` that fails on the untouched fixture; the agent never sees those checks.
-- **Conditions** (`run.py`): `none` (plugins off, provider default effort), `always-high` (plugins off, `reasoningEffort=high` on every call), `advisory` (effort-lanes context only), `enforce` (effort-lanes sets `reasoningEffort` per lane: fast/daily medium, deep/critical high).
+- **Conditions** (`run.py`): `none` (plugins off, provider default effort), `always-low` / `always-high` (plugins off, one fixed effort), `advisory` (effort-lanes context only), `enforce` (normal lane efforts), and `enforce-low` (only fast changes from medium to low).
 - **Runtime:** OpenCode, because it is the runtime where the router can actually change effort. Default model `opencode-go/gpt-5.6-luna` — an OpenAI reasoning model, so `reasoningEffort` is honored.
 - **Measured per run:** pass/fail from the hidden check, input/output/reasoning tokens and cost summed from `step_finish` events, wall time, the lane the plugin chose.
 
 ```bash
 python3 bench/run.py run --tasks F2 --conditions none,enforce          # smoke
-python3 bench/run.py run --repeat 3                                    # full: 15 × 4 × 3 = 180 runs
+python3 bench/run.py run --tasks F1,F2,F3,F4,F5 --conditions none,always-low,advisory,enforce,enforce-low --repeat 3  # exp2: 75 runs
+python3 bench/run.py run --repeat 3                                    # all current conditions: 15 × 6 × 3 = 270 runs
 python3 bench/run.py summarize bench/results/<file>.jsonl
 ```
 
