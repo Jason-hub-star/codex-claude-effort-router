@@ -1,4 +1,4 @@
-# Effort Lanes
+# Model Orchestrator
 
 코딩 에이전트 런타임 다섯 개(Codex · Claude Code · OpenCode · OpenClaw · Hermes Agent)가 **같은 노력 정책** 하나를 쓰게 하는 라우터와, 하네스를 쓰이는 크기로 유지하는 작업 습관 모음입니다.
 
@@ -19,7 +19,7 @@
 
 ## 왜
 
-모든 프롬프트에 최대 추론을 쓰면 느리고 비싸고, 운영 마이그레이션에 최소 추론을 쓰면 사고가 납니다. 대부분은 설정 하나를 고른 뒤 잊습니다. Effort Lanes는 프롬프트 단위로 결정합니다. 잘못된 입력·설정은 라우팅 출력 없이 끝나고, OpenCode·OpenClaw 어댑터는 분류를 2초로 제한해 라우터 실패가 턴을 막지 않게 합니다.
+모든 프롬프트에 최대 추론을 쓰면 느리고 비싸고, 운영 마이그레이션에 최소 추론을 쓰면 사고가 납니다. 대부분은 설정 하나를 고른 뒤 잊습니다. Model Orchestrator는 프롬프트 단위로 결정합니다. 잘못된 입력·설정은 라우팅 출력 없이 끝나고, OpenCode·OpenClaw 어댑터는 분류를 2초로 제한해 라우터 실패가 턴을 막지 않게 합니다.
 
 | 차선 | 신호 | 강도 | Codex 기본 | Claude 기본 |
 |---|---|---|---|---|
@@ -58,26 +58,26 @@ A/B 전까지 medium을 유지하며, 아래 low 결과는 OpenCode에서 측정
 Windows에서는 **WSL 2** Ubuntu/Debian 안에서 실행하세요. Git Bash, PowerShell, 명령 프롬프트는 지원하지 않습니다.
 
 ```bash
-git clone https://github.com/Jason-hub-star/effort-lanes.git
-cd effort-lanes
+git clone https://github.com/Jason-hub-star/model-orchestrator.git
+cd model-orchestrator
 bash install.sh                 # 감지된 모든 런타임, 코어만
 bash install.sh --starter       # 선택: 워크플로 스킬 10종 추가
 bash install.sh --runtimes claude,opencode --skills decision-sheet,evidence-audit
 bash install.sh --dry-run
 ```
 
-먼저 코어만 설치하고 필요한 스킬만 더하는 편을 권합니다. 설치기는 공유 라우터를 `~/.config/effort-lanes/effort_router.py`에 한 벌 두고, 기존 훅을 건드리지 않고 자기 항목만 병합하며, 중복은 정확히 하나로 수렴시키고, 1회성 `*.effort-router.bak` 백업을 만들고, 런타임 요구사항과 설정 JSON을 쓰기 전에 검사합니다. 설치 후 열린 세션은 재시작하세요.
+먼저 코어만 설치하고 필요한 스킬만 더하는 편을 권합니다. 설치기는 공유 라우터를 `~/.config/model-orchestrator/model_orchestrator.py`에 한 벌 두고, 기존 훅을 건드리지 않고 자기 항목만 병합하며, 중복은 정확히 하나로 수렴시키고, 1회성 `*.model-orchestrator.bak` 백업을 만들고, 런타임 요구사항과 설정 JSON을 쓰기 전에 검사합니다. 설치 후 열린 세션은 재시작하세요.
 
 다른 경로:
 
-- **Claude Code 플러그인 마켓플레이스** — `/plugin marketplace add Jason-hub-star/effort-lanes` → `/plugin install effort-lanes@effort-lanes`
-- **스킬만** — `npx skills add Jason-hub-star/effort-lanes --list`
-- **OpenClaw** — `openclaw plugins install ./openclaw` (선택하면 설치기가 실행). `plugins.allow`에 `effort-lanes`를 넣고 OpenClaw를 재시작하세요.
-- **Hermes** — 설치기가 플러그인을 복사하고 비대화형으로 `hermes plugins enable effort-lanes`를 실행합니다. Hermes를 재시작하세요. 프로세스 분리를 원하면 `~/.hermes/config.yaml`에 `hooks.pre_llm_call` 셸 훅으로 같은 라우터를 걸면 됩니다.
+- **Claude Code 플러그인 마켓플레이스** — `/plugin marketplace add Jason-hub-star/model-orchestrator` → `/plugin install model-orchestrator@model-orchestrator`
+- **스킬만** — `npx skills add Jason-hub-star/model-orchestrator --list`
+- **OpenClaw** — `openclaw plugins install ./openclaw` (선택하면 설치기가 실행). `plugins.allow`에 `model-orchestrator`를 넣고 OpenClaw를 재시작하세요.
+- **Hermes** — 설치기가 플러그인을 복사하고 비대화형으로 `hermes plugins enable model-orchestrator`를 실행합니다. Hermes를 재시작하세요. 프로세스 분리를 원하면 `~/.hermes/config.yaml`에 `hooks.pre_llm_call` 셸 훅으로 같은 라우터를 걸면 됩니다.
 
 ## 설정
 
-프로젝트에 `.effort-lanes.json`(작업 디렉터리에서 위로 올라가며 탐색) 또는 전역 `~/.config/effort-lanes/config.json`. 프로젝트 값이 이기고 키워드는 합쳐집니다. 모든 키가 선택이고 깨진 파일은 무시됩니다.
+프로젝트에 `.model-orchestrator.json`(작업 디렉터리에서 위로 올라가며 탐색) 또는 전역 `~/.config/model-orchestrator/config.json`. 프로젝트 값이 이기고 키워드는 합쳐집니다. 모든 키가 선택이고 깨진 파일은 무시됩니다.
 
 ```json
 {
@@ -90,6 +90,17 @@ bash install.sh --dry-run
 ```
 
 `floor`는 오판이 비싼 레포(하드웨어·운영 인프라)용이고, `lanes.<lane>.<runtime>`은 강제 가능한 런타임의 차선별 모델입니다. 예시는 [`router/config.example.json`](router/config.example.json).
+
+## Routing Studio 미리보기
+
+실제 저장소 라우팅 경계 테스트가 끝나기 전까지 대시보드는 의도적으로 읽기 전용입니다. 현재 부모 모델을 몰래 바꾸거나 저장되는 척하지 않고, 관측된 경로·추천 경로·차선별 다음 작업자 맵을 보여줍니다.
+
+![Model Orchestrator 읽기 전용 Routing Studio](assets/model-orchestrator-dashboard.png)
+
+```bash
+python3 -m http.server 4173 -d dashboard
+# http://localhost:4173 열기
+```
 
 필요하면 프롬프트에서 차선을 명시하세요.
 
@@ -121,7 +132,7 @@ morning-brief → aim-before-build → decision-sheet? → converge-plan? → go
 
 ## Compact·clear·계속하기
 
-Effort Lanes는 “마감” 때 자동 compact나 자동 clear를 실행하지 않습니다. Compact는 요약 호출 비용이 들고 같은 스레드를 계속 써야 회수됩니다. 관련 없는 작업을 clear하면 가장 깨끗하지만 대화에만 있던 세부 맥락은 사라집니다.
+Model Orchestrator는 “마감” 때 자동 compact나 자동 clear를 실행하지 않습니다. Compact는 요약 호출 비용이 들고 같은 스레드를 계속 써야 회수됩니다. 관련 없는 작업을 clear하면 가장 깨끗하지만 대화에만 있던 세부 맥락은 사라집니다.
 
 | 다음 작업 | 권장 행동 |
 |---|---|
@@ -146,7 +157,7 @@ bash scripts/check-docs.sh
 
 ```bash
 bash scripts/check.sh
-python3 router/effort_router.py --classify --json --runtime opencode --prompt "버그를 고치고 테스트해줘"
+python3 router/model_orchestrator.py --classify --json --runtime opencode --prompt "버그를 고치고 테스트해줘"
 ```
 
 프롬프트 47개(한/영)·두 셸 훅 계약·깨진 설정·floor·Node 플러그인 계약 2종·Hermes 플러그인·5런타임 설치기·문서 게이트 파손 테스트 10종을 덮습니다. 실런타임 증거와 기록으로 남긴 실패는 [docs/evidence/VALIDATION.md](docs/evidence/VALIDATION.md).
@@ -181,6 +192,6 @@ v0.2까지는 일부러 Codex+Claude 전용의 좁은 라우터였습니다. v0.
 
 - 훅은 fail-open. 라우터는 사용자 텍스트를 실행하지 않고, 플러그인은 프롬프트를 셸이 아닌 프로세스 인자로 넘깁니다.
 - 설치되는 파일은 전부 고정 자산이며 프롬프트로 생성되지 않습니다.
-- OpenClaw·OpenCode 플러그인은 런타임과 같은 신뢰 수준으로 in-process 실행됩니다. 설치 전에 읽고, OpenClaw에서는 `plugins.allow`에 `effort-lanes`를 넣으세요.
+- OpenClaw·OpenCode 플러그인은 런타임과 같은 신뢰 수준으로 in-process 실행됩니다. 설치 전에 읽고, OpenClaw에서는 `plugins.allow`에 `model-orchestrator`를 넣으세요.
 
 MIT. [English README](README.md)

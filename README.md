@@ -1,15 +1,15 @@
-# Effort Lanes
+# Model Orchestrator
 
-[![test](https://github.com/Jason-hub-star/effort-lanes/actions/workflows/test.yml/badge.svg)](https://github.com/Jason-hub-star/effort-lanes/actions/workflows/test.yml)
-[![MIT](https://img.shields.io/badge/license-MIT-7C3AED.svg)](LICENSE)
-[![router: stdlib only](https://img.shields.io/badge/router-stdlib%20only-10B981.svg)](router/effort_router.py)
+[![test](https://github.com/Jason-hub-star/model-orchestrator/actions/workflows/test.yml/badge.svg)](https://github.com/Jason-hub-star/model-orchestrator/actions/workflows/test.yml)
+[![MIT](https://img.shields.io/badge/license-MIT-004737.svg)](LICENSE)
+[![router: stdlib only](https://img.shields.io/badge/router-stdlib%20only-10B981.svg)](router/model_orchestrator.py)
 [![runtimes: 5](https://img.shields.io/badge/runtimes-Codex%20%C2%B7%20Claude%20Code%20%C2%B7%20OpenCode%20%C2%B7%20OpenClaw%20%C2%B7%20Hermes-0EA5E9.svg)](#what-actually-changes-per-runtime)
 
 One deterministic effort policy for five coding-agent runtimes, plus the working habits that keep an agent harness small enough to be used.
 
 Use this when you work across these runtimes and want one deterministic per-prompt effort policy, not a full autonomous-agent framework.
 
-Every prompt is classified into one of four lanes — **fast, daily, deep, critical** — by a single stdlib-only Python file. The same file runs as a shell hook in Codex and Claude Code, and behind thin plugins in OpenCode, OpenClaw, and Hermes Agent. Where a runtime lets a hook change the model or reasoning effort, Effort Lanes can enforce the lane; everywhere else it injects a routing hint and says so.
+Every prompt is classified into one of four lanes — **fast, daily, deep, critical** — by a single stdlib-only Python file. The same file runs as a shell hook in Codex and Claude Code, and behind thin plugins in OpenCode, OpenClaw, and Hermes Agent. Where a runtime lets a hook change the model or reasoning effort, Model Orchestrator can enforce the lane; everywhere else it injects a routing hint and says so.
 
 ## Measured impact, including the loss
 
@@ -24,7 +24,7 @@ So the low setting improved the previous harness configuration, but this small f
 
 ## Why
 
-Maximum reasoning on every prompt is slow and expensive. Minimum reasoning on a production migration is how incidents start. Most people pick one setting and leave it. Effort Lanes makes the choice per prompt, deterministically. Malformed input or config emits no routing output, and the OpenCode/OpenClaw adapters cap classification at two seconds so a router failure does not block the turn.
+Maximum reasoning on every prompt is slow and expensive. Minimum reasoning on a production migration is how incidents start. Most people pick one setting and leave it. Model Orchestrator makes the choice per prompt, deterministically. Malformed input or config emits no routing output, and the OpenCode/OpenClaw adapters cap classification at two seconds so a router failure does not block the turn.
 
 | Lane | Signal | Effort | Codex default | Claude default |
 |---|---|---|---|---|
@@ -63,34 +63,34 @@ Enforcement is off by default. Switching models mid-session invalidates prompt c
 On Windows, run the installer inside **WSL 2** Ubuntu/Debian. Native Git Bash, PowerShell, and Command Prompt are not supported.
 
 ```bash
-git clone https://github.com/Jason-hub-star/effort-lanes.git
-cd effort-lanes
+git clone https://github.com/Jason-hub-star/model-orchestrator.git
+cd model-orchestrator
 bash install.sh                 # every runtime detected on this machine, core only
 bash install.sh --starter       # optional: add all ten workflow skills
 bash install.sh --runtimes claude,opencode --skills decision-sheet,evidence-audit
 bash install.sh --dry-run       # print targets, change nothing
 ```
 
-Start core-only and add skills only when you need them. The installer copies one shared router to `~/.config/effort-lanes/effort_router.py`, merges its own hook entry without touching yours, converges duplicates to exactly one handler, makes one-time `*.effort-router.bak` backups, and validates runtime prerequisites and settings JSON before writing. Restart open sessions afterwards.
+Start core-only and add skills only when you need them. The installer copies one shared router to `~/.config/model-orchestrator/model_orchestrator.py`, merges its own hook entry without touching yours, converges duplicates to exactly one handler, makes one-time `*.model-orchestrator.bak` backups, and validates runtime prerequisites and settings JSON before writing. Restart open sessions afterwards.
 
 Other routes:
 
-- **Claude Code plugin marketplace** — `/plugin marketplace add Jason-hub-star/effort-lanes`, then `/plugin install effort-lanes@effort-lanes`. Installs the hook, the four lane subagents, and the skills natively.
-- **Skills only, any runtime** — `npx skills add Jason-hub-star/effort-lanes --list`.
-- **OpenClaw** — `openclaw plugins install ./openclaw` (the installer runs this when selected). Add `effort-lanes` to `plugins.allow`, then restart OpenClaw.
-- **Hermes** — the installer copies the plugin and runs non-interactive `hermes plugins enable effort-lanes`; restart Hermes afterwards. Prefer a subprocess boundary? Add a shell hook instead:
+- **Claude Code plugin marketplace** — `/plugin marketplace add Jason-hub-star/model-orchestrator`, then `/plugin install model-orchestrator@model-orchestrator`. Installs the hook, the four lane subagents, and the skills natively.
+- **Skills only, any runtime** — `npx skills add Jason-hub-star/model-orchestrator --list`.
+- **OpenClaw** — `openclaw plugins install ./openclaw` (the installer runs this when selected). Add `model-orchestrator` to `plugins.allow`, then restart OpenClaw.
+- **Hermes** — the installer copies the plugin and runs non-interactive `hermes plugins enable model-orchestrator`; restart Hermes afterwards. Prefer a subprocess boundary? Add a shell hook instead:
 
   ```yaml
   # ~/.hermes/config.yaml
   hooks:
     pre_llm_call:
-      - command: "python3 ~/.config/effort-lanes/effort_router.py"
+      - command: "python3 ~/.config/model-orchestrator/model_orchestrator.py"
         timeout: 5
   ```
 
 ## Configure
 
-Drop `.effort-lanes.json` in a project (found by walking up from the working directory) or `~/.config/effort-lanes/config.json` globally. Project values win; keyword lists merge. Every key is optional and a malformed file is ignored.
+Drop `.model-orchestrator.json` in a project (found by walking up from the working directory) or `~/.config/model-orchestrator/config.json` globally. Project values win; keyword lists merge. Every key is optional and a malformed file is ignored.
 
 ```json
 {
@@ -103,6 +103,17 @@ Drop `.effort-lanes.json` in a project (found by walking up from the working dir
 ```
 
 `floor` is for repositories where a wrong guess is expensive (hardware, production infrastructure): every prompt starts at that lane. `lanes.<lane>.<runtime>` sets the model a runtime should use for that lane; enforcement reads it. See [`router/config.example.json`](router/config.example.json).
+
+## Routing Studio preview
+
+The dashboard is deliberately read-only while the real-repository routing boundary test is pending. It shows observed versus recommended paths and the proposed per-lane worker map without pretending to save changes or silently replace the current parent model.
+
+![Model Orchestrator read-only Routing Studio](assets/model-orchestrator-dashboard.png)
+
+```bash
+python3 -m http.server 4173 -d dashboard
+# open http://localhost:4173
+```
 
 Ask for a lane explicitly whenever you want:
 
@@ -136,7 +147,7 @@ Full table and install options in [skills/README.md](skills/README.md).
 
 ## Compact, clear, or keep going?
 
-Effort Lanes does not auto-compact or auto-clear at “finish.” Compaction costs a summarization pass and only pays back if the same thread continues; clearing an unrelated task is cheaper and cleaner but discards conversational detail.
+Model Orchestrator does not auto-compact or auto-clear at “finish.” Compaction costs a summarization pass and only pays back if the same thread continues; clearing an unrelated task is cheaper and cleaner but discards conversational detail.
 
 | Next work | Recommended action |
 |---|---|
@@ -166,7 +177,7 @@ This repository runs the same gate on itself in CI. It caught a stray file on it
 
 ```bash
 bash scripts/check.sh
-python3 router/effort_router.py --classify --json --runtime opencode --prompt "fix the bug and test it"
+python3 router/model_orchestrator.py --classify --json --runtime opencode --prompt "fix the bug and test it"
 ```
 
 The suite covers 47 English/Korean prompts, the hook contracts for both shell-hook shapes, malformed and hostile config, project floors, plugin contracts for OpenCode and OpenClaw under plain Node, the Hermes plugin, the installer across five runtime homes, and ten break tests for the docs gate. Live-runtime evidence and the failures kept on record are in [docs/evidence/VALIDATION.md](docs/evidence/VALIDATION.md).
@@ -212,7 +223,7 @@ python3 bench/run.py summarize bench/results/<file>.jsonl
 
 ## Architecture
 
-![Effort routing workflow](assets/effort-routing.svg)
+![Model orchestration workflow](assets/model-orchestration.svg)
 
 ![Optional starter workflow](assets/starter-workflow.svg)
 
@@ -227,7 +238,7 @@ Until v0.2 this project was deliberately a narrow router for Codex and Claude Co
 - Hook parsing fails open: invalid input or config exits successfully without blocking the prompt.
 - The router never executes user-supplied text. Plugins pass the prompt to it as a process argument, never through a shell.
 - Installed agent, profile, plugin, and skill files are fixed repository assets, not generated from prompts.
-- OpenClaw and OpenCode plugins run in-process with the runtime's own trust level; read them before installing, and add `effort-lanes` to OpenClaw's `plugins.allow`.
+- OpenClaw and OpenCode plugins run in-process with the runtime's own trust level; read them before installing, and add `model-orchestrator` to OpenClaw's `plugins.allow`.
 
 See [SECURITY.md](SECURITY.md) for reporting.
 

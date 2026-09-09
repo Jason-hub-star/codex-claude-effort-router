@@ -26,12 +26,12 @@ Last updated: 2026-09-09 (Asia/Seoul). Local versions at the time: OpenCode 1.18
 | Runtime | What ran | Result |
 |---|---|---|
 | Claude Code | isolated `CLAUDE_CONFIG_DIR` and plugin cache; `claude plugin validate --strict .`, local marketplace add, install, list, and details | Validation passed; plugin status **enabled**; inventory reported 10 skills, 4 agents, and 1 `UserPromptSubmit` hook. No subscription or model call was needed |
-| OpenCode | `opencode run -m opencode-go/kimi-k2.7-code` with the plugin installed and `EFFORT_LANES_DEBUG` set; prompt asked the model to repeat any `[EFFORT LANES]` line it received | `chat.message` fired (lane=fast, explicit request), `chat.params` fired (effort=medium), the model answered **`LANE=FAST EFFORT=MEDIUM`** — the injected context reached the model |
-| OpenCode | same with `EFFORT_LANES_ENFORCE=1` | `chat.params` set `reasoningEffort`; the provider accepted the call without error. Whether that provider honors the field is not measured here |
+| OpenCode | `opencode run -m opencode-go/kimi-k2.7-code` with the plugin installed and `MODEL_ORCHESTRATOR_DEBUG` set; prompt asked the model to repeat any `[MODEL ORCHESTRATOR]` line it received | `chat.message` fired (lane=fast, explicit request), `chat.params` fired (effort=medium), the model answered **`LANE=FAST EFFORT=MEDIUM`** — the injected context reached the model |
+| OpenCode | same with `MODEL_ORCHESTRATOR_ENFORCE=1` | `chat.params` set `reasoningEffort`; the provider accepted the call without error. Whether that provider honors the field is not measured here |
 | OpenClaw | `openclaw plugins install --link ./openclaw`, `plugins info`, `plugins doctor` | Status `loaded`, "No plugin issues detected". A package-name/id mismatch warning was found and fixed (unscoped npm name must equal the manifest id) |
 | OpenClaw | `openclaw agent --local --agent main -m "lane=fast reply OK"` | `before_model_resolve` fired with lane=fast; the turn then failed at the model (no provider credentials on this machine), so `before_prompt_build` was verified offline only |
-| Hermes | plugin copied to `~/.hermes/plugins/effort-lanes`, `hermes plugins enable`, `hermes plugins doctor effort-lanes --ci` | "runtime discovery, manifest parsing, import, and registration passed; 1 hook(s)" |
-| Hermes | shell hook `hooks.pre_llm_call` → router, `hermes hooks test pre_llm_call` | exit 0 in 0.106 s; Hermes parsed `{"context": "[EFFORT LANES] lane=DAILY …"}` as its wire shape |
+| Hermes | plugin copied to `~/.hermes/plugins/model-orchestrator`, `hermes plugins enable`, `hermes plugins doctor model-orchestrator --ci` | "runtime discovery, manifest parsing, import, and registration passed; 1 hook(s)" |
+| Hermes | shell hook `hooks.pre_llm_call` → router, `hermes hooks test pre_llm_call` | exit 0 in 0.106 s; Hermes parsed `{"context": "[MODEL ORCHESTRATOR] lane=DAILY …"}` as its wire shape |
 | Codex | persisted threads with `-p effort-daily` / `-p effort-deep`; built-in `explorer` delegation | `gpt-5.6-terra/medium`, `gpt-5.6-sol/high`; `BUILTIN_EXPLORER_OK` (v0.1 evidence, unchanged) |
 
 ## Benchmark pilot (2026-09-08)
@@ -111,7 +111,7 @@ billing reduction is claimed. Method, limits, and the compact/clear decision rul
 4. (v0.3) A foreground `opencode run` produced no output for two minutes; the same command detached with `nohup` completed in 8 s. Cause not identified; recorded so the next person does not chase it.
 5. (v0.3) Loading the router with `importlib.util.spec_from_file_location` on Python 3.14 raised inside `@dataclass` until the module was placed in `sys.modules` first. The Hermes loader now does this; the unit tests already did.
 6. (v0.3) The docs gate, on its first run against this repository, failed on a real stray file in `docs/`. It was moved, not whitelisted.
-7. (bench) The first pilot was stopped at 4/60 because this machine's personal global config (default lane deep) leaked into the runs. The router gained `EFFORT_LANES_CONFIG` so the benchmark isolates itself; the 4 contaminated rows were discarded.
+7. (bench) The first pilot was stopped at 4/60 because this machine's personal global config (default lane deep) leaked into the runs. The router gained `MODEL_ORCHESTRATOR_CONFIG` so the benchmark isolates itself; the 4 contaminated rows were discarded.
 8. (bench) Prediction P1 failed: on `gpt-5.6-luna` the fast lane's `reasoningEffort=medium` and the injected guidance both cost more reasoning than the provider default. Recorded as a hypothesis for the next single-axis run, not patched on the same data.
 9. (platform) A clean Ubuntu 24.04 container with its default Node 18 passed the Python tests but failed loading the installed OpenCode ESM plugin. Repeating the same source and checks with Node 22 passed, so Node 22 is now an explicit prerequisite rather than a guessed compatibility floor.
 10. (bench) Experiment 2 first produced 30 unusable HTTP 401 rows. After a separate one-task access smoke succeeded, the original conditions and model were resumed in a new file; blocked rows remain excluded.

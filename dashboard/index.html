@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Model Orchestrator — Routing Observatory</title>
+    <style>
+      :root {
+        --background: #021713;
+        --stage: #032019;
+        --panel: #073c31;
+        --panel-strong: #004737;
+        --line: rgba(86, 240, 159, 0.24);
+        --line-soft: rgba(212, 255, 232, 0.12);
+        --mint: #56f09f;
+        --mint-soft: #d4ffe8;
+        --cream: #fffbec;
+        --gold: #ffc900;
+        --muted: rgba(212, 255, 232, 0.62);
+        --shadow: 0 28px 80px rgba(0, 10, 8, 0.28);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 1180px;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 74% 0%, rgba(86, 240, 159, 0.08), transparent 28rem),
+          var(--background);
+        color: var(--cream);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button, select { font: inherit; }
+
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 168px minmax(0, 1fr);
+        grid-template-rows: 82px minmax(690px, 1fr);
+      }
+
+      .topbar {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(360px, 1fr) auto auto;
+        align-items: center;
+        gap: 30px;
+        padding: 0 30px;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .brand { display: flex; align-items: center; gap: 16px; }
+      .mark { width: 46px; height: 46px; position: relative; }
+      .mark span {
+        position: absolute;
+        width: 25px;
+        height: 13px;
+        border-radius: 4px;
+        background: var(--mint);
+        box-shadow: 0 0 24px rgba(86, 240, 159, 0.24);
+      }
+      .mark span:nth-child(1) { left: 0; top: 7px; }
+      .mark span:nth-child(2) { left: 15px; top: 0; }
+      .mark span:nth-child(3) { left: 15px; top: 27px; }
+      .mark span:nth-child(4) { left: 30px; top: 20px; }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1;
+        letter-spacing: 0.055em;
+      }
+      .brand p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+
+      .metrics { display: flex; align-items: center; }
+      .metric { min-width: 112px; padding: 4px 20px; border-left: 1px solid var(--line-soft); }
+      .metric span { color: var(--muted); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
+      .metric strong { display: block; margin-top: 5px; font-size: 15px; }
+
+      .live {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        color: var(--mint-soft);
+        background: rgba(86, 240, 159, 0.08);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .live::before { content: ""; width: 8px; height: 8px; background: var(--mint); border-radius: 50%; box-shadow: 0 0 12px var(--mint); }
+
+      .rail {
+        display: flex;
+        flex-direction: column;
+        padding: 28px 16px 24px;
+        border-right: 1px solid var(--line-soft);
+      }
+      .rail-head { display: flex; justify-content: space-between; align-items: center; margin: 0 6px 15px; color: var(--muted); font-size: 11px; }
+      .add { width: 29px; height: 29px; border: 1px solid var(--line); background: rgba(86, 240, 159, 0.08); color: var(--mint-soft); border-radius: 9px; }
+      .projects { display: grid; gap: 6px; }
+      .project {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        padding: 11px 10px;
+        border: 0;
+        border-radius: 10px;
+        color: var(--muted);
+        background: transparent;
+        text-align: left;
+        font-size: 12px;
+      }
+      .project::before { content: ""; width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: rgba(212, 255, 232, 0.25); }
+      .project.active { color: var(--cream); background: rgba(86, 240, 159, 0.11); }
+      .project.active::before { background: var(--mint); box-shadow: 0 0 10px rgba(86, 240, 159, 0.72); }
+      .rail-foot { margin-top: auto; display: grid; gap: 6px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+
+      main { min-width: 0; padding: 18px 20px 20px; }
+      .workspace {
+        height: 100%;
+        display: grid;
+        grid-template-columns: minmax(720px, 1fr) 368px;
+        grid-template-rows: minmax(610px, 1fr) 74px;
+        gap: 14px;
+      }
+
+      .stage, .studio, .recent {
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+
+      .stage {
+        position: relative;
+        overflow: hidden;
+        padding: 34px 36px 28px;
+        background:
+          radial-gradient(circle at 82% 18%, rgba(86, 240, 159, 0.09), transparent 25rem),
+          radial-gradient(circle at 10% 82%, rgba(0, 95, 74, 0.7), transparent 28rem),
+          var(--stage);
+        border-radius: 26px 26px 26px 10px;
+      }
+      .stage::before, .stage::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(86, 240, 159, 0.055);
+        pointer-events: none;
+      }
+      .stage::before { width: 740px; height: 740px; right: -250px; top: -430px; box-shadow: 0 0 120px rgba(86, 240, 159, 0.04) inset; }
+      .stage::after { width: 600px; height: 600px; left: -320px; bottom: -360px; }
+
+      .stage-header { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; }
+      .eyebrow { margin: 0 0 13px; color: var(--mint); font-size: 9px; font-weight: 800; letter-spacing: 0.28em; text-transform: uppercase; }
+      .stage h2 { margin: 0; max-width: 650px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(40px, 4vw, 65px); font-weight: 500; line-height: 0.98; letter-spacing: -0.04em; }
+      .stage-subtitle { margin: 13px 0 0; color: var(--mint-soft); font-size: 17px; font-weight: 400; }
+      .preview-badge { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 10px; letter-spacing: 0.08em; }
+
+      .flow {
+        position: relative;
+        z-index: 1;
+        margin-top: 72px;
+        display: grid;
+        grid-template-columns: 1.05fr 50px 0.88fr 50px 1.12fr 50px 1.05fr 50px 1fr;
+        align-items: center;
+      }
+      .node {
+        min-height: 126px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        padding: 22px 14px 16px;
+        border: 1px solid rgba(86, 240, 159, 0.7);
+        background: linear-gradient(145deg, rgba(0, 71, 55, 0.94), rgba(3, 32, 25, 0.96));
+        border-radius: 23px 23px 23px 9px;
+        text-align: center;
+      }
+      .node strong { font-size: 15px; letter-spacing: 0.01em; }
+      .node small { margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+      .node .role {
+        position: absolute;
+        top: -12px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--mint);
+        color: var(--stage);
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+      }
+      .node.lane { min-height: 88px; border-radius: 999px; color: var(--mint); }
+      .node.verified { min-height: 88px; border-radius: 999px; box-shadow: 0 0 28px rgba(86, 240, 159, 0.2), inset 0 0 24px rgba(86, 240, 159, 0.12); }
+      .node.verified strong::before { content: "✓"; margin-right: 8px; color: var(--mint); }
+      .route { height: 2px; position: relative; background: var(--mint); box-shadow: 0 0 11px rgba(86, 240, 159, 0.8); }
+      .route::after { content: ""; position: absolute; right: -2px; top: -4px; width: 8px; height: 8px; border-top: 2px solid var(--mint); border-right: 2px solid var(--mint); transform: rotate(45deg); }
+
+      .recommendation {
+        position: relative;
+        z-index: 1;
+        width: 57%;
+        margin: 54px auto 0;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .dash { flex: 1; height: 48px; border-bottom: 2px dashed rgba(86, 240, 159, 0.75); border-radius: 0 0 50% 50%; }
+      .suggestion { min-width: 240px; padding: 13px 18px; border: 1px solid var(--line); border-radius: 13px; background: rgba(2, 23, 19, 0.74); }
+      .suggestion strong { display: block; font-size: 12px; }
+      .suggestion span { color: var(--muted); font-size: 10px; }
+
+      .legend { position: absolute; left: 36px; bottom: 26px; display: flex; gap: 20px; color: var(--muted); font-size: 9px; }
+      .legend span::before { content: ""; display: inline-block; width: 26px; margin-right: 8px; vertical-align: 3px; border-top: 2px solid var(--mint); }
+      .legend .recommended::before { border-top-style: dashed; }
+
+      .studio {
+        display: flex;
+        flex-direction: column;
+        padding: 28px 23px 22px;
+        background: linear-gradient(165deg, rgba(7, 60, 49, 0.96), rgba(3, 32, 25, 0.98));
+        border-radius: 18px 26px 18px 18px;
+      }
+      .studio-title { display: flex; align-items: center; justify-content: space-between; }
+      .studio h2 { margin: 0; font-size: 17px; letter-spacing: 0.11em; }
+      .readonly { padding: 6px 9px; border: 1px solid rgba(255, 201, 0, 0.35); border-radius: 999px; color: var(--gold); font-size: 8px; font-weight: 900; letter-spacing: 0.1em; }
+      .studio > p { margin: 9px 0 20px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+      .parent { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(2, 23, 19, 0.34); font-size: 11px; }
+      .parent strong { margin-left: 7px; color: var(--mint-soft); }
+
+      .routing-map { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+      .routing-labels, .routing-row { display: grid; grid-template-columns: 0.74fr 1.2fr 0.68fr; gap: 8px; }
+      .routing-labels { margin-bottom: 8px; color: var(--muted); font-size: 8px; letter-spacing: 0.08em; }
+      .routing-row { margin-bottom: 8px; }
+      select {
+        width: 100%;
+        min-width: 0;
+        padding: 11px 9px;
+        appearance: auto;
+        color: var(--cream);
+        background: rgba(2, 23, 19, 0.46);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        font-size: 10px;
+      }
+      select:disabled { opacity: 1; -webkit-text-fill-color: var(--cream); cursor: not-allowed; }
+
+      .toggles { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 15px; }
+      .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+      .toggle-row strong { display: block; font-size: 11px; }
+      .toggle-row small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+      .switch { width: 40px; height: 23px; padding: 3px; border: 0; border-radius: 999px; background: var(--mint); }
+      .switch::after { content: ""; display: block; width: 17px; height: 17px; margin-left: auto; background: var(--cream); border-radius: 50%; }
+      .switch:disabled { opacity: 0.72; cursor: not-allowed; }
+
+      .save { margin-top: auto; padding-top: 18px; }
+      .save button { width: 100%; padding: 13px; border: 0; border-radius: 11px; background: var(--mint); color: var(--stage); font-size: 11px; font-weight: 900; }
+      .save button:disabled { opacity: 0.48; cursor: not-allowed; }
+      .save small { display: block; margin-top: 8px; color: var(--muted); text-align: center; font-size: 9px; }
+
+      .recent {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 130px 1fr auto;
+        align-items: center;
+        gap: 18px;
+        padding: 12px 18px;
+        border-radius: 16px 8px 16px 16px;
+        background: rgba(7, 60, 49, 0.68);
+      }
+      .recent h2 { margin: 0; font-size: 12px; }
+      .run { display: flex; align-items: center; gap: 24px; min-width: 0; padding: 11px 14px; border: 1px solid var(--line-soft); border-radius: 10px; color: var(--muted); font-size: 10px; }
+      .run::before { content: ""; width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--mint); }
+      .run strong { color: var(--cream); font-weight: 600; }
+      .run .path { margin-left: auto; color: var(--mint-soft); white-space: nowrap; }
+      .run-stats { color: var(--muted); font-size: 10px; white-space: nowrap; }
+
+      @media (max-width: 1320px) {
+        .workspace { grid-template-columns: minmax(680px, 1fr) 330px; }
+        .metrics .metric:nth-child(-n+2) { display: none; }
+        .flow { grid-template-columns: 1fr 28px 0.8fr 28px 1fr 28px 1fr 28px 0.9fr; }
+        .stage { padding-inline: 26px; }
+        .node strong { font-size: 13px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div><h1>MODEL ORCHESTRATOR</h1><p>Live Agent Routing Observatory</p></div>
+        </div>
+        <div class="metrics" aria-label="Sample run metrics">
+          <div class="metric"><span>Total tokens</span><strong>14.6K</strong></div>
+          <div class="metric"><span>Cost</span><strong>$0.056</strong></div>
+          <div class="metric"><span>Wall time</span><strong>24.1s</strong></div>
+          <div class="metric"><span>Pass rate</span><strong>98%</strong></div>
+        </div>
+        <div class="live">LIVE</div>
+      </header>
+
+      <aside class="rail" aria-label="Projects">
+        <div class="rail-head"><span>Projects</span><button class="add" disabled aria-label="Add project unavailable in preview">+</button></div>
+        <nav class="projects">
+          <button class="project active" disabled>Harness Lab</button>
+          <button class="project" disabled>Robot App</button>
+          <button class="project" disabled>News Pipeline</button>
+          <button class="project" disabled>VTube</button>
+        </nav>
+        <div class="rail-foot">
+          <button class="project" disabled>Settings</button>
+          <button class="project" disabled>Integrations</button>
+        </div>
+      </aside>
+
+      <main>
+        <div class="workspace">
+          <section class="stage" aria-labelledby="execution-heading">
+            <div class="stage-header">
+              <div>
+                <p class="eyebrow">Live execution</p>
+                <h2 id="execution-heading">One target.<br />The right crew.</h2>
+                <p class="stage-subtitle">See which model worked, when it switched, and what it cost.</p>
+              </div>
+              <span class="preview-badge">SAMPLE RUN · OPENCODE</span>
+            </div>
+
+            <div class="flow" aria-label="Observed orchestration path">
+              <div class="node"><strong>USER REQUEST</strong><small>Fix build error<br />in auth module</small></div>
+              <div class="route" aria-hidden="true"></div>
+              <div class="node lane"><strong>FAST</strong><small>0.2s · 12 tokens</small></div>
+              <div class="route" aria-hidden="true"></div>
+              <div class="node"><span class="role">CURRENT PARENT</span><strong>KIMI K2.7</strong><small>Parent model<br />8.4s · 2.1K tokens</small></div>
+              <div class="route" aria-hidden="true"></div>
+              <div class="node"><span class="role">WORKER</span><strong>LUNA SCOUT</strong><small>Fresh worker<br />15.8s · 12.4K tokens</small></div>
+              <div class="route" aria-hidden="true"></div>
+              <div class="node verified"><strong>VERIFIED</strong><small>Checks passed<br />Ready to merge</small></div>
+            </div>
+
+            <div class="recommendation" aria-label="Recommended path not taken">
+              <div class="dash" aria-hidden="true"></div>
+              <div class="suggestion"><strong>GPT-5.6 Luna</strong><span>Suggested for the next simple task</span></div>
+              <div class="dash" aria-hidden="true"></div>
+            </div>
+
+            <div class="legend"><span>Observed execution</span><span class="recommended">Recommended, not taken</span></div>
+          </section>
+
+          <aside class="studio" aria-labelledby="studio-heading">
+            <div class="studio-title"><h2 id="studio-heading">ROUTING STUDIO</h2><span class="readonly">READ ONLY</span></div>
+            <p>Preview the per-lane worker map. Editing arrives only after the routing boundary test passes.</p>
+            <div class="parent">Current parent:<strong>Kimi K2.7 Code</strong></div>
+
+            <div class="routing-map">
+              <div class="routing-labels"><span>LANE</span><span>NEXT WORKER</span><span>EFFORT</span></div>
+              <div class="routing-row">
+                <select disabled aria-label="Fast lane"><option>FAST</option></select>
+                <select disabled aria-label="Fast worker"><option>GPT-5.6 Luna</option></select>
+                <select disabled aria-label="Fast effort"><option>LOW</option></select>
+              </div>
+              <div class="routing-row">
+                <select disabled aria-label="Daily lane"><option>DAILY</option></select>
+                <select disabled aria-label="Daily worker"><option>GPT-5.6 Luna</option></select>
+                <select disabled aria-label="Daily effort"><option>MEDIUM</option></select>
+              </div>
+              <div class="routing-row">
+                <select disabled aria-label="Deep lane"><option>DEEP</option></select>
+                <select disabled aria-label="Deep worker"><option>Kimi K2.7 Code</option></select>
+                <select disabled aria-label="Deep effort"><option>HIGH</option></select>
+              </div>
+              <div class="routing-row">
+                <select disabled aria-label="Critical lane"><option>CRITICAL</option></select>
+                <select disabled aria-label="Critical worker"><option>Kimi K2.7 Code</option></select>
+                <select disabled aria-label="Critical effort"><option>HIGH</option></select>
+              </div>
+            </div>
+
+            <div class="toggles">
+              <div class="toggle-row"><div><strong>Auto route</strong><small>Select the next fresh worker</small></div><button class="switch" role="switch" aria-checked="true" disabled aria-label="Auto route enabled"></button></div>
+              <div class="toggle-row"><div><strong>Fallback to parent</strong><small>Return work when a worker fails</small></div><button class="switch" role="switch" aria-checked="true" disabled aria-label="Fallback enabled"></button></div>
+            </div>
+
+            <div class="save"><button disabled>SAVE ROUTING MAP</button><small>Applies to the next worker or fresh session.</small></div>
+          </aside>
+
+          <section class="recent" aria-label="Recent runs">
+            <h2>Recent run</h2>
+            <div class="run"><span>2 min ago</span><strong>Fix build error in auth module</strong><span class="path">FAST → Kimi K2.7 → Luna Scout → VERIFIED</span></div>
+            <div class="run-stats">14.6K tokens · $0.056 · 24.1s</div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

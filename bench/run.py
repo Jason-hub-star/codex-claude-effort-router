@@ -5,8 +5,8 @@ Conditions
   none         OpenCode with external plugins disabled (--pure); provider default effort
   always-low   --pure plus reasoningEffort=low on every call
   always-high  --pure plus reasoningEffort=high on every call (OPENCODE_CONFIG_CONTENT)
-  advisory     effort-lanes plugin loaded, enforcement off (context injection only)
-  enforce      effort-lanes plugin loaded, EFFORT_LANES_ENFORCE=1 (reasoningEffort per lane)
+  advisory     model-orchestrator plugin loaded, enforcement off (context injection only)
+  enforce      model-orchestrator plugin loaded, MODEL_ORCHESTRATOR_ENFORCE=1 (reasoningEffort per lane)
   enforce-low  enforce plus a config override that changes only the fast lane to low
 
 Each run copies the fixture into a fresh temp directory, runs `opencode run --format json`,
@@ -32,7 +32,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 OPENCODE = os.environ.get("OPENCODE_BIN", "opencode")
-PLUGIN = Path.home() / ".config" / "opencode" / "plugins" / "effort-lanes.js"
+PLUGIN = Path.home() / ".config" / "opencode" / "plugins" / "model-orchestrator.js"
 LANES = ("fast", "daily", "deep", "critical")
 CONDITIONS = {
     # pure = external plugins disabled; effort = reasoningEffort forced for every call;
@@ -41,8 +41,8 @@ CONDITIONS = {
     "always-low": {"pure": True, "effort": "low"},
     "always-high": {"pure": True, "effort": "high"},
     "advisory": {"pure": False},
-    "enforce": {"pure": False, "env": {"EFFORT_LANES_ENFORCE": "1"}},
-    "enforce-low": {"pure": False, "env": {"EFFORT_LANES_ENFORCE": "1"},
+    "enforce": {"pure": False, "env": {"MODEL_ORCHESTRATOR_ENFORCE": "1"}},
+    "enforce-low": {"pure": False, "env": {"MODEL_ORCHESTRATOR_ENFORCE": "1"},
                     "lane_config": {"lanes": {"fast": {"effort": "low"}}}},
 }
 
@@ -145,18 +145,18 @@ def run_one(task: dict, cond: str, model: str, timeout: int) -> dict:
     work = Path(tempfile.mkdtemp(prefix=f"bench-{task['id']}-{cond}-"))
     shutil.copytree(HERE / "fixtures" / "todo", work, dirs_exist_ok=True)
     env = dict(os.environ)
-    env.pop("EFFORT_LANES_ENFORCE", None)
+    env.pop("MODEL_ORCHESTRATOR_ENFORCE", None)
     env.pop("OPENCODE_CONFIG_CONTENT", None)
     env.update(spec.get("env", {}))
     debug = work / ".bench_lanes.jsonl"
-    env["EFFORT_LANES_DEBUG"] = str(debug)
+    env["MODEL_ORCHESTRATOR_DEBUG"] = str(debug)
     # isolate the router from this machine's personal config and test the repository's router, not an installed copy
     lane_config = spec.get("lane_config")
-    config_path = work / ".effort-lanes-config.json"
+    config_path = work / ".model-orchestrator-config.json"
     if lane_config:
         config_path.write_text(json.dumps(lane_config))
-    env["EFFORT_LANES_CONFIG"] = str(config_path) if lane_config else str(work / ".no-global-config.json")
-    env["EFFORT_LANES_ROUTER"] = str(HERE.parent / "router" / "effort_router.py")
+    env["MODEL_ORCHESTRATOR_CONFIG"] = str(config_path) if lane_config else str(work / ".no-global-config.json")
+    env["MODEL_ORCHESTRATOR_ROUTER"] = str(HERE.parent / "router" / "model_orchestrator.py")
     if spec.get("effort"):
         env["OPENCODE_CONFIG_CONTENT"] = config_content(model, spec["effort"])
     cmd = [OPENCODE, "run", "--format", "json", "-m", model, "--dir", str(work), "--title", f"bench {task['id']} {cond}"]
@@ -244,9 +244,9 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def select_worker(task: dict) -> tuple[str, str]:
     """Return the classifier's lane and the sealed fresh-worker model for a task."""
-    env = {**os.environ, "EFFORT_LANES_CONFIG": str(HERE / "results" / ".no-global-config.json")}
+    env = {**os.environ, "MODEL_ORCHESTRATOR_CONFIG": str(HERE / "results" / ".no-global-config.json")}
     result = subprocess.run(
-        [sys.executable, str(HERE.parent / "router" / "effort_router.py"), "--classify", "--json",
+        [sys.executable, str(HERE.parent / "router" / "model_orchestrator.py"), "--classify", "--json",
          "--runtime", "opencode", "--prompt", task["prompt"], "--cwd", str(HERE / "fixtures" / "todo")],
         capture_output=True, text=True, env=env, check=True,
     )
@@ -351,10 +351,10 @@ def cmd_summarize(args: argparse.Namespace) -> int:
 def cmd_route(args: argparse.Namespace) -> int:
     """Offline: does the router send each task prompt to its labeled lane? No model runs."""
     tasks = json.loads((HERE / "tasks.json").read_text())
-    env = {**os.environ, "EFFORT_LANES_CONFIG": str(HERE / "results" / ".no-global-config.json")}
+    env = {**os.environ, "MODEL_ORCHESTRATOR_CONFIG": str(HERE / "results" / ".no-global-config.json")}
     agree = 0
     for task in tasks:
-        result = subprocess.run([sys.executable, str(HERE.parent / "router" / "effort_router.py"), "--classify",
+        result = subprocess.run([sys.executable, str(HERE.parent / "router" / "model_orchestrator.py"), "--classify",
                                  "--prompt", task["prompt"], "--cwd", str(HERE / "fixtures" / "todo")],
                                 capture_output=True, text=True, env=env, check=True)
         lane = json.loads(result.stdout)["lane"]

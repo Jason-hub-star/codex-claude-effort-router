@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE="${EFFORT_LANES_WSL_IMAGE:-node:22-bookworm-slim}"
+IMAGE="${MODEL_ORCHESTRATOR_WSL_IMAGE:-node:22-bookworm-slim}"
 
 command -v docker >/dev/null || { echo "ERROR: Docker is required for the WSL userland regression" >&2; exit 1; }
 docker info >/dev/null

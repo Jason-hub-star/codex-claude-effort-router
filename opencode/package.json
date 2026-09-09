@@ -1,12 +1,12 @@
 {
-  "name": "opencode-effort-lanes",
+  "name": "opencode-model-orchestrator",
   "version": "0.3.0",
-  "description": "Effort Lanes plugin for OpenCode: per-prompt effort routing context, optional reasoningEffort enforcement.",
+  "description": "Model Orchestrator plugin for OpenCode: per-prompt model orchestration context, optional reasoningEffort enforcement.",
   "type": "module",
-  "main": "effort-lanes.js",
-  "exports": "./effort-lanes.js",
-  "files": ["effort-lanes.js"],
+  "main": "model-orchestrator.js",
+  "exports": "./model-orchestrator.js",
+  "files": ["model-orchestrator.js"],
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/Jason-hub-star/effort-lanes" },
+  "repository": { "type": "git", "url": "https://github.com/Jason-hub-star/model-orchestrator" },
   "keywords": ["opencode", "opencode-plugin", "effort", "routing"]
 }

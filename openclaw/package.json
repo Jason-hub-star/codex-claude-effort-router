@@ -1,7 +1,7 @@
 {
-  "name": "effort-lanes",
+  "name": "model-orchestrator",
   "version": "0.3.0",
-  "description": "Effort Lanes plugin for OpenClaw: per-prompt effort routing with optional model enforcement.",
+  "description": "Model Orchestrator plugin for OpenClaw: per-prompt model orchestration with optional model enforcement.",
   "type": "module",
   "main": "index.js",
   "license": "MIT",

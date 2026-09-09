@@ -18,7 +18,7 @@
 | 두 런타임 일관성 | 임시 Codex/Claude 홈에 같은 스킬과 각 플랫폼 훅 설치 | PASS |
 | 공개 발견성 | 공개 GitHub 주소로 `npx skills --list`가 7개 발견 | PASS |
 | 공개 선택 설치 | 깨끗한 임시 프로젝트에 `agent-starter` 정확 일치 설치와 lock 기록 | PASS |
-| Linux 회귀 | [GitHub Actions 34126285413](https://github.com/Jason-hub-star/codex-claude-effort-router/actions/runs/34126285413) | PASS |
+| Linux 회귀 | [GitHub Actions 34126285413](https://github.com/Jason-hub-star/model-orchestrator/actions/runs/34126285413) | PASS |
 | 구조 문서 | Archify 스키마·직교 화살표·범례 여백 검사와 브라우저 육안 확인 | PASS |
 | 홍보물 | 기존 v0.1 Remotion 자산만 유지 | HOLD |
 

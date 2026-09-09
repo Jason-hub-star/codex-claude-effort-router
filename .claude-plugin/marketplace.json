@@ -1,12 +1,12 @@
 {
-  "name": "effort-lanes",
+  "name": "model-orchestrator",
   "owner": { "name": "Jason-hub-star", "url": "https://github.com/Jason-hub-star" },
-  "metadata": { "description": "Effort lanes: one routing policy for Codex, Claude Code, OpenCode, OpenClaw, and Hermes.", "version": "0.3.0" },
+  "metadata": { "description": "Model Orchestrator: one routing policy for Codex, Claude Code, OpenCode, OpenClaw, and Hermes.", "version": "0.3.0" },
   "plugins": [
     {
-      "name": "effort-lanes",
+      "name": "model-orchestrator",
       "source": "./",
-      "description": "Deterministic effort routing hook plus ten portable workflow skills.",
+      "description": "Deterministic model orchestration hook plus ten portable workflow skills.",
       "version": "0.3.0",
       "category": "productivity"
     }

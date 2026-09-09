@@ -33,7 +33,7 @@ harness-audit ⇄ absorb
 bash install.sh --starter                                  # all ten, every detected runtime
 bash install.sh --skills decision-sheet,evidence-audit     # a subset
 bash install.sh --list-skills
-npx skills add Jason-hub-star/effort-lanes --skill harness-audit -g -a codex -a claude-code
+npx skills add Jason-hub-star/model-orchestrator --skill harness-audit -g -a codex -a claude-code
 ```
 
 Skill folders are copied whole, so `harness-audit/scripts/audit.py` travels with its SKILL.md. OpenCode reads `~/.claude/skills` directly and needs no separate copy. OpenClaw requires frontmatter `metadata` to be a single-line JSON object and rejects symlinked skill directories; `scripts/check.sh` enforces the first rule.

@@ -2,12 +2,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LANES_HOME="${EFFORT_LANES_HOME:-$HOME/.config/effort-lanes}"
-CODEX_ROOT="${EFFORT_LANES_CODEX_HOME:-${EFFORT_ROUTER_CODEX_HOME:-$HOME/.codex}}"
-CLAUDE_ROOT="${EFFORT_LANES_CLAUDE_HOME:-${EFFORT_ROUTER_CLAUDE_HOME:-$HOME/.claude}}"
-OPENCODE_ROOT="${EFFORT_LANES_OPENCODE_HOME:-$HOME/.config/opencode}"
-OPENCLAW_ROOT="${EFFORT_LANES_OPENCLAW_HOME:-$HOME/.openclaw}"
-HERMES_ROOT="${EFFORT_LANES_HERMES_HOME:-$HOME/.hermes}"
+ORCHESTRATOR_HOME="${MODEL_ORCHESTRATOR_HOME:-$HOME/.config/model-orchestrator}"
+CODEX_ROOT="${MODEL_ORCHESTRATOR_CODEX_HOME:-$HOME/.codex}"
+CLAUDE_ROOT="${MODEL_ORCHESTRATOR_CLAUDE_HOME:-$HOME/.claude}"
+OPENCODE_ROOT="${MODEL_ORCHESTRATOR_OPENCODE_HOME:-$HOME/.config/opencode}"
+OPENCLAW_ROOT="${MODEL_ORCHESTRATOR_OPENCLAW_HOME:-$HOME/.openclaw}"
+HERMES_ROOT="${MODEL_ORCHESTRATOR_HERMES_HOME:-$HOME/.hermes}"
 ALL_RUNTIMES=(codex claude opencode openclaw hermes)
 AVAILABLE_SKILLS=(
   absorb
@@ -33,7 +33,7 @@ usage() {
   cat <<'USAGE'
 Usage: bash install.sh [options]
 
-Install effort lanes for Codex, Claude Code, OpenCode, OpenClaw, and Hermes Agent.
+Install Model Orchestrator for Codex, Claude Code, OpenCode, OpenClaw, and Hermes Agent.
 
 Options:
   --runtimes LIST    Comma-separated subset of: codex,claude,opencode,openclaw,hermes
@@ -53,7 +53,7 @@ Examples:
   bash install.sh --scaffold ~/code/my-project
   bash install.sh --starter --dry-run
 
-Existing files receive one-time .effort-router.bak backups. Restart active
+Existing files receive one-time .model-orchestrator.bak backups. Restart active
 sessions after installation. Enforcement (OpenCode, OpenClaw) stays off until
 you enable it; see README.
 USAGE
@@ -153,7 +153,7 @@ if want opencode || want openclaw; then
   }
 fi
 
-for home in "$LANES_HOME" "$CODEX_ROOT" "$CLAUDE_ROOT" "$OPENCODE_ROOT" "$HERMES_ROOT"; do
+for home in "$ORCHESTRATOR_HOME" "$CODEX_ROOT" "$CLAUDE_ROOT" "$OPENCODE_ROOT" "$HERMES_ROOT"; do
   [[ ! -e "$home" || -d "$home" ]] || { echo "ERROR: runtime home is not a directory: $home" >&2; exit 1; }
 done
 for settings in "$CODEX_ROOT/hooks.json" "$CLAUDE_ROOT/settings.json"; do
@@ -167,13 +167,13 @@ if [[ "$DO_SCAFFOLD" -eq 1 ]]; then
 fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "Dry run OK. Shared router: $LANES_HOME/effort_router.py"
+  echo "Dry run OK. Shared router: $ORCHESTRATOR_HOME/model_orchestrator.py"
   echo "Runtimes: ${SELECTED_RUNTIMES[*]}"
   want codex && echo "Dry run OK. Codex target: $CODEX_ROOT"
   want claude && echo "Dry run OK. Claude target: $CLAUDE_ROOT"
-  want opencode && echo "Dry run OK. OpenCode target: $OPENCODE_ROOT/plugins/effort-lanes.js"
+  want opencode && echo "Dry run OK. OpenCode target: $OPENCODE_ROOT/plugins/model-orchestrator.js"
   want openclaw && echo "Dry run OK. OpenClaw target: openclaw plugins install $ROOT/openclaw"
-  want hermes && echo "Dry run OK. Hermes target: $HERMES_ROOT/plugins/effort-lanes"
+  want hermes && echo "Dry run OK. Hermes target: $HERMES_ROOT/plugins/model-orchestrator"
   if [[ "$HAS_SELECTED_SKILLS" -eq 1 ]]; then echo "Workflow skills: ${SELECTED_SKILLS[*]}"; else echo "Workflow skills: none (core-only)"; fi
   [[ "$DO_SCAFFOLD" -eq 1 ]] && echo "Scaffold target: $SCAFFOLD_DIR"
   exit 0
@@ -184,7 +184,7 @@ fi
 install_file() {
   local source="$1" target="$2"
   mkdir -p "$(dirname "$target")"
-  if [[ -e "$target" && ! -e "$target.effort-router.bak" ]]; then cp -p "$target" "$target.effort-router.bak"; fi
+  if [[ -e "$target" && ! -e "$target.model-orchestrator.bak" ]]; then cp -p "$target" "$target.model-orchestrator.bak"; fi
   cp "$source" "$target"
 }
 
@@ -202,13 +202,13 @@ merge_hook() {
   mkdir -p "$(dirname "$settings")"
   [[ -e "$settings" ]] || printf '{"hooks":{}}\n' > "$settings"
   jq -e . "$settings" >/dev/null
-  [[ -e "$settings.effort-router.bak" ]] || cp -p "$settings" "$settings.effort-router.bak"
+  [[ -e "$settings.model-orchestrator.bak" ]] || cp -p "$settings" "$settings.model-orchestrator.bak"
   if [[ "$platform" == "codex" ]]; then
     handler="$(jq -nc --arg command "$command" '{type:"command",command:$command,timeout:2,statusMessage:"Routing task effort",additionalContextLimit:1200}')"
   else
     handler="$(jq -nc --arg command "$command" '{type:"command",command:$command,timeout:2,statusMessage:"Routing task effort"}')"
   fi
-  temp="$(mktemp "$(dirname "$settings")/.effort-router.XXXXXX")"
+  temp="$(mktemp "$(dirname "$settings")/.model-orchestrator.XXXXXX")"
   jq --arg command "$command" --argjson handler "$handler" '
     .hooks = (.hooks // {})
     | .hooks.UserPromptSubmit = (.hooks.UserPromptSubmit // [])
@@ -232,26 +232,26 @@ install_skills_into() {
 # --- install ----------------------------------------------------------------------------
 
 NOTES=()
-install_file "$ROOT/router/effort_router.py" "$LANES_HOME/effort_router.py"
-[[ -e "$LANES_HOME/config.example.json" ]] || cp "$ROOT/router/config.example.json" "$LANES_HOME/config.example.json"
+install_file "$ROOT/router/model_orchestrator.py" "$ORCHESTRATOR_HOME/model_orchestrator.py"
+[[ -e "$ORCHESTRATOR_HOME/config.example.json" ]] || cp "$ROOT/router/config.example.json" "$ORCHESTRATOR_HOME/config.example.json"
 
 if want codex; then
-  install_file "$ROOT/router/effort_router.py" "$CODEX_ROOT/hooks/effort-router.py"
+  install_file "$ROOT/router/model_orchestrator.py" "$CODEX_ROOT/hooks/model-orchestrator.py"
   for source in "$ROOT"/codex/agents/*.toml; do install_file "$source" "$CODEX_ROOT/agents/$(basename "$source")"; done
   for source in "$ROOT"/codex/profiles/*.config.toml; do install_file "$source" "$CODEX_ROOT/$(basename "$source")"; done
-  merge_hook "$CODEX_ROOT/hooks.json" "python3 \"$CODEX_ROOT/hooks/effort-router.py\"" codex
+  merge_hook "$CODEX_ROOT/hooks.json" "python3 \"$CODEX_ROOT/hooks/model-orchestrator.py\"" codex
   install_skills_into "$CODEX_ROOT/skills"
 fi
 
 if want claude; then
-  install_file "$ROOT/router/effort_router.py" "$CLAUDE_ROOT/hooks/effort-router.py"
+  install_file "$ROOT/router/model_orchestrator.py" "$CLAUDE_ROOT/hooks/model-orchestrator.py"
   for source in "$ROOT"/agents/*.md; do install_file "$source" "$CLAUDE_ROOT/agents/$(basename "$source")"; done
-  merge_hook "$CLAUDE_ROOT/settings.json" "python3 \"$CLAUDE_ROOT/hooks/effort-router.py\"" claude
+  merge_hook "$CLAUDE_ROOT/settings.json" "python3 \"$CLAUDE_ROOT/hooks/model-orchestrator.py\"" claude
   install_skills_into "$CLAUDE_ROOT/skills"
 fi
 
 if want opencode; then
-  install_file "$ROOT/opencode/effort-lanes.js" "$OPENCODE_ROOT/plugins/effort-lanes.js"
+  install_file "$ROOT/opencode/model-orchestrator.js" "$OPENCODE_ROOT/plugins/model-orchestrator.js"
   if want claude; then
     NOTES+=("OpenCode reads skills from ~/.claude/skills, so no separate OpenCode skill copy was made.")
   else
@@ -260,11 +260,11 @@ if want opencode; then
 fi
 
 if want openclaw; then
-  if [[ -n "${EFFORT_LANES_OPENCLAW_HOME:-}" ]]; then
-    install_tree "$ROOT/openclaw" "$OPENCLAW_ROOT/extensions/effort-lanes"
+  if [[ -n "${MODEL_ORCHESTRATOR_OPENCLAW_HOME:-}" ]]; then
+    install_tree "$ROOT/openclaw" "$OPENCLAW_ROOT/extensions/model-orchestrator"
   elif command -v openclaw >/dev/null; then
     openclaw plugins install "$ROOT/openclaw" >/dev/null 2>&1 || NOTES+=("OpenClaw plugin install failed; run: openclaw plugins install $ROOT/openclaw")
-    NOTES+=("OpenClaw: restart the gateway, and add \"effort-lanes\" to plugins.allow to silence the trust warning.")
+    NOTES+=("OpenClaw: restart the gateway, and add \"model-orchestrator\" to plugins.allow to silence the trust warning.")
   else
     NOTES+=("OpenClaw CLI not found; skipped. Install it, then run: openclaw plugins install $ROOT/openclaw")
   fi
@@ -272,13 +272,13 @@ if want openclaw; then
 fi
 
 if want hermes; then
-  install_tree "$ROOT/hermes/effort-lanes" "$HERMES_ROOT/plugins/effort-lanes"
+  install_tree "$ROOT/hermes/model-orchestrator" "$HERMES_ROOT/plugins/model-orchestrator"
   install_skills_into "$HERMES_ROOT/skills"
-  if [[ -z "${EFFORT_LANES_HERMES_HOME:-}" ]] && command -v hermes >/dev/null; then
+  if [[ -z "${MODEL_ORCHESTRATOR_HERMES_HOME:-}" ]] && command -v hermes >/dev/null; then
     # stdin closed: the enable command can prompt for capability grants and would otherwise hang
-    hermes plugins enable effort-lanes </dev/null >/dev/null 2>&1 || NOTES+=("Run: hermes plugins enable effort-lanes")
+    hermes plugins enable model-orchestrator </dev/null >/dev/null 2>&1 || NOTES+=("Run: hermes plugins enable model-orchestrator")
   else
-    NOTES+=("Hermes: run 'hermes plugins enable effort-lanes' (or add a pre_llm_call shell hook; see README).")
+    NOTES+=("Hermes: run 'hermes plugins enable model-orchestrator' (or add a pre_llm_call shell hook; see README).")
   fi
 fi
 
@@ -297,5 +297,5 @@ fi
 
 skill_note="core only"
 [[ "$HAS_SELECTED_SKILLS" -eq 1 ]] && skill_note="and ${#SELECTED_SKILLS[@]} starter skill(s)"
-echo "Installed effort lanes for: ${SELECTED_RUNTIMES[*]} ($skill_note). Restart active sessions."
+echo "Installed Model Orchestrator for: ${SELECTED_RUNTIMES[*]} ($skill_note). Restart active sessions."
 if [[ ${#NOTES[@]} -gt 0 ]]; then printf '  note: %s\n' "${NOTES[@]}"; fi

@@ -1,4 +1,4 @@
-"""effort-lanes plugin for Hermes Agent.
+"""model-orchestrator plugin for Hermes Agent.
 
 ``pre_llm_call`` returns a routing-context string that Hermes injects into the user turn.
 The lane decision is made by the shared Python router (one source of truth); this module
@@ -18,9 +18,9 @@ from pathlib import Path
 from types import ModuleType
 
 ROUTER_CANDIDATES = (
-    os.environ.get("EFFORT_LANES_ROUTER", ""),
-    str(Path.home() / ".config" / "effort-lanes" / "effort_router.py"),
-    str(Path.home() / ".claude" / "hooks" / "effort-router.py"),
+    os.environ.get("MODEL_ORCHESTRATOR_ROUTER", ""),
+    str(Path.home() / ".config" / "model-orchestrator" / "model_orchestrator.py"),
+    str(Path.home() / ".claude" / "hooks" / "model-orchestrator.py"),
 )
 
 _router: ModuleType | None = None
@@ -33,7 +33,7 @@ def _load_router() -> ModuleType | None:
     for candidate in ROUTER_CANDIDATES:
         if not candidate or not Path(candidate).is_file():
             continue
-        spec = importlib.util.spec_from_file_location("effort_lanes_router", candidate)
+        spec = importlib.util.spec_from_file_location("model_orchestrator_router", candidate)
         if spec is None or spec.loader is None:
             continue
         module = importlib.util.module_from_spec(spec)

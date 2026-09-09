@@ -6,7 +6,7 @@ Same tasks, same model, one axis changed: how the prompt's effort is chosen. Num
 
 - **Fixture:** `fixtures/todo`, a 7-file Python project with seeded defects (wrong date math, missing guard, hardcoded secret, path traversal, SQL injection, world-readable store).
 - **Tasks:** `tasks.json`, 15 prompts — 5 fast (lookups, a typo), 5 deep (fix, implement, refactor), 5 critical (security fixes). Each has a hidden check in `verify/<id>.py` that fails on the untouched fixture; the agent never sees those checks.
-- **Conditions** (`run.py`): `none` (plugins off, provider default effort), `always-low` / `always-high` (plugins off, one fixed effort), `advisory` (effort-lanes context only), `enforce` (normal lane efforts), and `enforce-low` (only fast changes from medium to low).
+- **Conditions** (`run.py`): `none` (plugins off, provider default effort), `always-low` / `always-high` (plugins off, one fixed effort), `advisory` (model-orchestrator context only), `enforce` (normal lane efforts), and `enforce-low` (only fast changes from medium to low).
 - **Runtime:** OpenCode, because it is the runtime where the router can actually change effort. Default model `opencode-go/gpt-5.6-luna` — an OpenAI reasoning model, so `reasoningEffort` is honored.
 - **Measured per run:** pass/fail from the hidden check, input/output/reasoning tokens and cost summed from `step_finish` events, wall time, the lane the plugin chose.
 

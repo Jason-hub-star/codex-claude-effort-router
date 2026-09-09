@@ -1,11 +1,11 @@
 {
-  "name": "effort-router-promo",
+  "name": "model-orchestrator-promo",
   "private": true,
   "version": "0.1.0",
   "scripts": {
     "studio": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts EffortRouter ../../assets/effort-router-demo.mp4 --codec=h264 --crf=23",
-    "still": "remotion still src/index.ts EffortRouter ../../assets/effort-router-poster.png --frame=360"
+    "render": "remotion render src/index.ts ModelOrchestrator ../../assets/model-orchestrator-demo.mp4 --codec=h264 --crf=23",
+    "still": "remotion still src/index.ts ModelOrchestrator ../../assets/model-orchestrator-poster.png --frame=390"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.520",

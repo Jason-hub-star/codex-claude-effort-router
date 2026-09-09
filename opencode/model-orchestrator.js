@@ -1,23 +1,23 @@
-// effort-lanes plugin for OpenCode (https://opencode.ai/docs/plugins/)
+// model-orchestrator plugin for OpenCode (https://opencode.ai/docs/plugins/)
 //
 // Thin adapter: the lane decision stays in the Python router (one source of truth).
 // - chat.message  → appends one synthetic text part with the routing context (advisory).
 // - chat.params   → when enforcement is enabled, sets `reasoningEffort` for the lane.
 //
 // Enforcement is opt-in. Enable it with `"enforce": {"opencode": true}` in
-// ~/.config/effort-lanes/config.json or `EFFORT_LANES_ENFORCE=1`.
-// Set EFFORT_LANES_DEBUG=/path/to/file to append one JSON line per hook call.
+// ~/.config/model-orchestrator/config.json or `MODEL_ORCHESTRATOR_ENFORCE=1`.
+// Set MODEL_ORCHESTRATOR_DEBUG=/path/to/file to append one JSON line per hook call.
 
 import { execFile } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const CONFIG_DIR = join(homedir(), ".config", "effort-lanes");
+const CONFIG_DIR = join(homedir(), ".config", "model-orchestrator");
 const ROUTER_CANDIDATES = [
-  process.env.EFFORT_LANES_ROUTER,
-  join(CONFIG_DIR, "effort_router.py"),
-  join(homedir(), ".claude", "hooks", "effort-router.py"),
+  process.env.MODEL_ORCHESTRATOR_ROUTER,
+  join(CONFIG_DIR, "model_orchestrator.py"),
+  join(homedir(), ".claude", "hooks", "model-orchestrator.py"),
 ].filter(Boolean);
 const TIMEOUT_MS = 2000;
 
@@ -30,13 +30,13 @@ function readConfig() {
 }
 
 function enforceEnabled() {
-  if (process.env.EFFORT_LANES_ENFORCE === "1") return true;
+  if (process.env.MODEL_ORCHESTRATOR_ENFORCE === "1") return true;
   const enforce = readConfig().enforce;
   return enforce === true || Boolean(enforce && enforce.opencode === true);
 }
 
 function debug(record) {
-  const target = process.env.EFFORT_LANES_DEBUG;
+  const target = process.env.MODEL_ORCHESTRATOR_DEBUG;
   if (!target) return;
   try {
     appendFileSync(target, JSON.stringify({ time: Date.now(), ...record }) + "\n");
@@ -73,7 +73,7 @@ function partId() {
   return "prt_" + Date.now().toString(36).padStart(9, "0") + Math.random().toString(36).slice(2, 12);
 }
 
-export const EffortLanesPlugin = async ({ directory }) => {
+export const ModelOrchestratorPlugin = async ({ directory }) => {
   const lanes = new Map(); // sessionID -> route
 
   return {
@@ -105,4 +105,4 @@ export const EffortLanesPlugin = async ({ directory }) => {
   };
 };
 
-export default EffortLanesPlugin;
+export default ModelOrchestratorPlugin;

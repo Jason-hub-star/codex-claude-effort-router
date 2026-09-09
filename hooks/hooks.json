@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/router/effort_router.py\"",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/router/model_orchestrator.py\"",
             "timeout": 2,
             "statusMessage": "Routing task effort"
           }

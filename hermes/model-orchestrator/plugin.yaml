@@ -1,7 +1,7 @@
-name: effort-lanes
+name: model-orchestrator
 version: 0.3.0
 description: "Routes each prompt into fast/daily/deep/critical effort lanes and injects the routing context before the LLM call. Advisory only: Hermes hooks cannot change model or reasoning effort per turn yet."
-author: "effort-lanes contributors"
+author: "model-orchestrator contributors"
 kind: standalone
 hooks:
   - pre_llm_call

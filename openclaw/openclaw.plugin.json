@@ -1,6 +1,6 @@
 {
-  "id": "effort-lanes",
-  "name": "Effort Lanes",
+  "id": "model-orchestrator",
+  "name": "Model Orchestrator",
   "version": "0.3.0",
   "description": "Routes each prompt into fast/daily/deep/critical effort lanes; optionally enforces a model per lane.",
   "configSchema": {
@@ -14,7 +14,7 @@
   },
   "uiHints": {
     "enforce": { "label": "Enforce lane model", "help": "Override provider/model per lane instead of only advising." },
-    "router": { "label": "Router path", "help": "Path to effort_router.py; defaults to ~/.config/effort-lanes/effort_router.py." },
+    "router": { "label": "Router path", "help": "Path to model_orchestrator.py; defaults to ~/.config/model-orchestrator/model_orchestrator.py." },
     "models": { "label": "Lane models", "help": "Map lane → provider/model, e.g. critical → anthropic/claude-opus-5." }
   }
 }

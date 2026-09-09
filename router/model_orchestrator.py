@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic prompt-to-effort routing shared by every supported agent runtime.
+"""Deterministic prompt-to-model orchestration shared by every supported agent runtime.
 
 Runtimes: Codex, Claude Code (shell hooks) and OpenCode, OpenClaw, Hermes (thin plugins
 that call this file with ``--classify --json``). The classifier never executes user text,
@@ -16,8 +16,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-CONFIG_NAME = ".effort-lanes.json"
-GLOBAL_CONFIG = Path(os.environ.get("EFFORT_LANES_CONFIG") or (Path.home() / ".config" / "effort-lanes" / "config.json"))
+CONFIG_NAME = ".model-orchestrator.json"
+GLOBAL_CONFIG = Path(os.environ.get("MODEL_ORCHESTRATOR_CONFIG") or (Path.home() / ".config" / "model-orchestrator" / "config.json"))
 LANE_ORDER = ("fast", "daily", "deep", "critical")
 RUNTIMES = ("hook", "codex", "claude", "opencode", "openclaw", "hermes", "generic")
 
@@ -205,7 +205,7 @@ def classify(prompt: str, cwd: str | None = None, config: dict[str, object] | No
 
 
 def render_context(lane: str, reason: str, effort: str, targets: dict[str, str], runtime: str) -> str:
-    head = f"[EFFORT LANES] lane={lane.upper()}; reason={reason}; effort={effort}. "
+    head = f"[MODEL ORCHESTRATOR] lane={lane.upper()}; reason={reason}; effort={effort}. "
     if runtime in ("hook", "codex", "claude"):
         body = (
             f"Codex target={targets['codex']}, verified built-in agent={targets['codex_agent']}; "
@@ -251,7 +251,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--classify", action="store_true", help="classify --prompt instead of reading hook JSON")
     parser.add_argument("--prompt", default="")
-    parser.add_argument("--cwd", default=None, help="project directory used to locate .effort-lanes.json")
+    parser.add_argument("--cwd", default=None, help="project directory used to locate .model-orchestrator.json")
     parser.add_argument("--runtime", default="hook", choices=RUNTIMES, help="shape the context string for a runtime")
     parser.add_argument("--json", action="store_true", help="emit lane, reason, effort, targets, and context")
     args = parser.parse_args()

@@ -2,13 +2,15 @@
 
 ## Unreleased
 
+- Breaking rename: the public project, GitHub slug, plugin/package IDs, context tag, environment variables, and config paths move from `effort-lanes` to `model-orchestrator`. New installs use `~/.config/model-orchestrator/`, `.model-orchestrator.json`, `MODEL_ORCHESTRATOR_*`, and `[MODEL ORCHESTRATOR]`; the old IDs are not installed as aliases.
+- Dashboard: added a dependency-free, read-only Routing Studio preview. It visualizes a sample observed worker path and the proposed lane-to-model map while keeping every control disabled until the real-repository routing boundary test passes.
 - Distribution: Claude Code now uses standard `agents/` and `hooks/hooks.json` auto-discovery. A fresh isolated local marketplace install reports the plugin enabled with 10 skills, 4 agents, and 1 hook; the prior manifest failed current Claude CLI validation and then double-loaded its hook.
 - Installer: OpenCode/OpenClaw selections now require Node 22 or newer before any files are written, with missing-Node and Node-18 regressions.
 - Docs: README claims now match the 47-case matrix, six-condition/270-run benchmark runner, conditional prerequisites, and runtime-specific evidence limits. The stale generated promo is no longer embedded pending regeneration.
 - Evidence: the README now leads with whole-run token and cost deltas, including the no-router loss. Added a compact-versus-clear decision record; no automatic finish hook was added because compact only pays back when a thread continues and clear intentionally drops conversation state.
 - Fast lane default effort is now `low`. In the sealed 75-run experiment, `enforce-low` kept 15/15 passes while reducing mean reasoning tokens 49.8% versus `enforce=medium`; total cost changed -1.9%. Codex and Claude profile targets remain medium because the result covers one OpenCode provider.
 - Benchmark (`bench/`): fixture with seeded defects, 15 tasks with hidden checks, four routing conditions, predictions before runs, offline `route` check. Pilot 1 results and two failed predictions recorded in `bench/results/pilot-1.md`.
-- Router: `EFFORT_LANES_CONFIG` relocates the global config; fast keywords `how many`, `which file`, `what is the`; deep keywords for bug reports and "add a test"; a short typo request is fast even when it says "fix". Matrix grew to 47 cases.
+- Router: `MODEL_ORCHESTRATOR_CONFIG` relocates the global config; fast keywords `how many`, `which file`, `what is the`; deep keywords for bug reports and "add a test"; a short typo request is fast even when it says "fix". Matrix grew to 47 cases.
 - Platform boundary: Windows is supported through WSL 2 Ubuntu/Debian with Node 22, Python 3, `jq`, and Bash. Git Bash, PowerShell, and Command Prompt are explicitly unsupported. Added a reproducible clean-container regression.
 
 ## 0.3.0 — 2026-09-08

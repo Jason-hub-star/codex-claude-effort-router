@@ -18,13 +18,13 @@ for file in \
   README.md README.ko.md LICENSE SECURITY.md CHANGELOG.md CONTRIBUTING.md \
   docs/INDEX.md docs/status/PROJECT-STATUS.md docs/status/DOC-SYNC-MATRIX.md docs/archive/ARCHIVE-INDEX.md \
   docs/research/COMPARISON.md docs/research/INSTALL-UX-RESEARCH.ko.md docs/research/VIDEO-ASSESSMENT.ko.md \
-  docs/ref/diagrams/effort-routing.workflow.json docs/ref/diagrams/effort-routing.html \
+  docs/ref/diagrams/model-orchestration.workflow.json docs/ref/diagrams/model-orchestration.html \
   docs/ref/diagrams/starter-workflow.lifecycle.json docs/ref/diagrams/starter-workflow.html \
-  docs/evidence/VALIDATION.md docs/evidence/CONTEXT-MANAGEMENT.md assets/effort-routing.svg assets/starter-workflow.svg assets/effort-router-demo.mp4 \
-  router/effort_router.py router/config.example.json install.sh \
-  opencode/effort-lanes.js opencode/package.json \
+  docs/evidence/VALIDATION.md docs/evidence/CONTEXT-MANAGEMENT.md assets/model-orchestration.svg assets/starter-workflow.svg assets/model-orchestrator-demo.mp4 assets/model-orchestrator-dashboard.png dashboard/index.html \
+  router/model_orchestrator.py router/config.example.json install.sh \
+  opencode/model-orchestrator.js opencode/package.json \
   openclaw/index.js openclaw/openclaw.plugin.json openclaw/package.json \
-  hermes/effort-lanes/__init__.py hermes/effort-lanes/plugin.yaml \
+  hermes/model-orchestrator/__init__.py hermes/model-orchestrator/plugin.yaml \
   scaffold/scripts/check-docs.sh scaffold/docs/INDEX.md scaffold/docs/status/DOC-SYNC-MATRIX.md \
   .claude-plugin/plugin.json .claude-plugin/marketplace.json hooks/hooks.json tests/test_wsl_container.sh; do
   test -f "$ROOT/$file"
@@ -69,21 +69,21 @@ done
 [[ "$(bash "$ROOT/install.sh" --list-skills | wc -l | tr -d ' ')" == "$skill_count" ]]
 grep -q 'grill-me' "$ROOT/skills/decision-sheet/SKILL.md"   # prior art stays credited
 
-grep -q '<svg' "$ROOT/assets/effort-routing.svg"
+grep -q '<svg' "$ROOT/assets/model-orchestration.svg"
 grep -q '<svg' "$ROOT/assets/starter-workflow.svg"
-grep -q 'One Prompt, Right-Sized Effort' "$ROOT/docs/ref/diagrams/effort-routing.html"
+grep -q 'One Prompt, Right-Sized Effort' "$ROOT/docs/ref/diagrams/model-orchestration.html"
 grep -q 'Remixable Agent Work Lifecycle' "$ROOT/docs/ref/diagrams/starter-workflow.html"
 
 case_count="$(jq length "$ROOT/tests/cases.json")"
 grep -q "$case_count English/Korean prompts" "$ROOT/README.md"
 grep -q "프롬프트 ${case_count}개" "$ROOT/README.ko.md"
 grep -q "$case_count English/Korean prompts" "$ROOT/docs/evidence/VALIDATION.md"
-grep -q "$case_count English and Korean classification cases" "$ROOT/docs/ref/diagrams/effort-routing.workflow.json"
-grep -q "$case_count English and Korean classification cases" "$ROOT/docs/ref/diagrams/effort-routing.html"
+grep -q "$case_count English and Korean classification cases" "$ROOT/docs/ref/diagrams/model-orchestration.workflow.json"
+grep -q "$case_count English and Korean classification cases" "$ROOT/docs/ref/diagrams/model-orchestration.html"
 grep -q "$case_count routing cases" "$ROOT/promo/remotion/src/root.tsx"
-grep -q '>effort-lanes</div>' "$ROOT/promo/remotion/src/root.tsx"
-! grep -Eq '200-line|under 50 ms|effort-router-demo\.(gif|mp4)' "$ROOT/README.md"
-! grep -Eq '50ms 안|effort-router-demo\.(gif|mp4)' "$ROOT/README.ko.md"
+grep -q '>model-orchestrator</div>' "$ROOT/promo/remotion/src/root.tsx"
+! grep -Eq '200-line|under 50 ms|model-orchestrator-demo\.(gif|mp4)' "$ROOT/README.md"
+! grep -Eq '50ms 안|model-orchestrator-demo\.(gif|mp4)' "$ROOT/README.ko.md"
 grep -q 'Input + cache read' "$ROOT/README.md"
 grep -q '입력+캐시 읽기' "$ROOT/README.ko.md"
 for value in '-6.2%' '-11.7%' '-49.8%' '-1.9%' '+17.7%' '+15.4%' '-34.7%' '+3.8%'; do

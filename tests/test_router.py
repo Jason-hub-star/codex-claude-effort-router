@@ -10,8 +10,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ROUTER = ROOT / "router" / "effort_router.py"
-SPEC = importlib.util.spec_from_file_location("effort_router", ROUTER)
+ROUTER = ROOT / "router" / "model_orchestrator.py"
+SPEC = importlib.util.spec_from_file_location("model_orchestrator", ROUTER)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE
@@ -58,7 +58,7 @@ class RouterTests(unittest.TestCase):
         }
         output = MODULE.hook(payload)
         self.assertEqual(set(output), {"context"})
-        self.assertIn("[EFFORT LANES] lane=CRITICAL", output["context"])
+        self.assertIn("[MODEL ORCHESTRATOR] lane=CRITICAL", output["context"])
         self.assertNotIn("Codex target", output["context"])
         self.assertIsNone(MODULE.hook({"hook_event_name": "pre_llm_call", "extra": {"user_message": ""}}))
         self.assertIsNone(MODULE.hook({"hook_event_name": "pre_llm_call", "extra": "garbage"}))
@@ -119,7 +119,7 @@ class RouterTests(unittest.TestCase):
     def test_env_can_relocate_the_global_config(self):
         alt = Path(self.tmp.name) / "alt.json"
         alt.write_text(json.dumps({"default_lane": "critical"}))
-        env = {**os.environ, "EFFORT_LANES_CONFIG": str(alt)}
+        env = {**os.environ, "MODEL_ORCHESTRATOR_CONFIG": str(alt)}
         result = subprocess.run([sys.executable, str(ROUTER), "--classify", "--prompt", "ㄱ", "--cwd", str(self.project)],
                                 text=True, capture_output=True, check=True, env=env)
         self.assertEqual(json.loads(result.stdout)["lane"], "critical")
@@ -133,7 +133,7 @@ class RouterTests(unittest.TestCase):
         data = json.loads(result.stdout)
         self.assertEqual(data["lane"], "deep")
         self.assertEqual(data["effort"], "high")
-        self.assertIn("[EFFORT LANES] lane=DEEP", data["context"])
+        self.assertIn("[MODEL ORCHESTRATOR] lane=DEEP", data["context"])
         self.assertNotIn("Codex target", data["context"])
         legacy = subprocess.run(
             [sys.executable, str(ROUTER), "--classify", "--prompt", "count files"],

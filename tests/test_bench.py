@@ -67,7 +67,7 @@ class BenchTests(unittest.TestCase):
 
     def test_lane_config_reaches_the_router(self):
         """The experiment's axis: a config file must be able to change one lane's effort."""
-        spec = importlib.util.spec_from_file_location("router_for_bench", ROOT / "router" / "effort_router.py")
+        spec = importlib.util.spec_from_file_location("router_for_bench", ROOT / "router" / "model_orchestrator.py")
         router = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = router
         spec.loader.exec_module(router)

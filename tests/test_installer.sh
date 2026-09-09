@@ -13,29 +13,29 @@ HERMES_ROOT="$TMP_ROOT/hermes"
 mkdir -p "$CODEX_ROOT" "$CLAUDE_ROOT"
 ALL="codex,claude,opencode,openclaw,hermes"
 
-router_command="python3 \"$CODEX_ROOT/hooks/effort-router.py\""
+router_command="python3 \"$CODEX_ROOT/hooks/model-orchestrator.py\""
 jq -nc --arg command "$router_command" '{hooks:{UserPromptSubmit:[{hooks:[{type:"command",command:"keep-me",timeout:9},{type:"wrong",command:$command,timeout:99}]}]}}' > "$CODEX_ROOT/hooks.json"
 printf '{"hooks":{}}\n' > "$CLAUDE_ROOT/settings.json"
 
 with_homes() {
-  EFFORT_LANES_HOME="$LANES_HOME" EFFORT_LANES_CODEX_HOME="$CODEX_ROOT" EFFORT_LANES_CLAUDE_HOME="$CLAUDE_ROOT" \
-  EFFORT_LANES_OPENCODE_HOME="$OPENCODE_ROOT" EFFORT_LANES_OPENCLAW_HOME="$OPENCLAW_ROOT" EFFORT_LANES_HERMES_HOME="$HERMES_ROOT" "$@"
+  MODEL_ORCHESTRATOR_HOME="$LANES_HOME" MODEL_ORCHESTRATOR_CODEX_HOME="$CODEX_ROOT" MODEL_ORCHESTRATOR_CLAUDE_HOME="$CLAUDE_ROOT" \
+  MODEL_ORCHESTRATOR_OPENCODE_HOME="$OPENCODE_ROOT" MODEL_ORCHESTRATOR_OPENCLAW_HOME="$OPENCLAW_ROOT" MODEL_ORCHESTRATOR_HERMES_HOME="$HERMES_ROOT" "$@"
 }
 run_install() { with_homes bash "$ROOT/install.sh" --runtimes "$ALL" "$@" >/dev/null; }
 
 bash "$ROOT/install.sh" --help | grep -q '^Usage:'
 DRY="$TMP_ROOT/dry run"
-EFFORT_LANES_HOME="$DRY/lanes" EFFORT_LANES_CODEX_HOME="$DRY/codex" EFFORT_LANES_CLAUDE_HOME="$DRY/claude" \
+MODEL_ORCHESTRATOR_HOME="$DRY/lanes" MODEL_ORCHESTRATOR_CODEX_HOME="$DRY/codex" MODEL_ORCHESTRATOR_CLAUDE_HOME="$DRY/claude" \
   bash "$ROOT/install.sh" --runtimes codex,claude --dry-run --starter | grep -q '^Workflow skills:'
 [[ ! -e "$DRY" ]]
 
 # core install for every runtime, twice, must converge
 run_install
-[[ -f "$LANES_HOME/effort_router.py" ]]
+[[ -f "$LANES_HOME/model_orchestrator.py" ]]
 [[ -f "$LANES_HOME/config.example.json" ]]
-[[ -f "$OPENCODE_ROOT/plugins/effort-lanes.js" ]]
-[[ -f "$OPENCLAW_ROOT/extensions/effort-lanes/openclaw.plugin.json" ]]
-[[ -f "$HERMES_ROOT/plugins/effort-lanes/plugin.yaml" ]]
+[[ -f "$OPENCODE_ROOT/plugins/model-orchestrator.js" ]]
+[[ -f "$OPENCLAW_ROOT/extensions/model-orchestrator/openclaw.plugin.json" ]]
+[[ -f "$HERMES_ROOT/plugins/model-orchestrator/plugin.yaml" ]]
 [[ ! -d "$CODEX_ROOT/skills" ]]
 [[ ! -d "$CLAUDE_ROOT/skills" ]]
 first_hash="$(shasum -a 256 "$CODEX_ROOT/hooks.json" "$CLAUDE_ROOT/settings.json")"
@@ -47,18 +47,18 @@ jq -e --arg command "$router_command" '
   ([.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2 and .additionalContextLimit == 1200)] | length == 1)
   and any(.hooks.UserPromptSubmit[]?.hooks[]?; .command == "keep-me")
 ' "$CODEX_ROOT/hooks.json" >/dev/null
-claude_command="python3 \"$CLAUDE_ROOT/hooks/effort-router.py\""
+claude_command="python3 \"$CLAUDE_ROOT/hooks/model-orchestrator.py\""
 jq -e --arg command "$claude_command" '
   [.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2)] | length == 1
 ' "$CLAUDE_ROOT/settings.json" >/dev/null
-[[ -f "$CODEX_ROOT/hooks.json.effort-router.bak" ]]
-[[ -f "$CLAUDE_ROOT/settings.json.effort-router.bak" ]]
-printf 'null' | python3 "$CODEX_ROOT/hooks/effort-router.py" >/dev/null
+[[ -f "$CODEX_ROOT/hooks.json.model-orchestrator.bak" ]]
+[[ -f "$CLAUDE_ROOT/settings.json.model-orchestrator.bak" ]]
+printf 'null' | python3 "$CODEX_ROOT/hooks/model-orchestrator.py" >/dev/null
 
 # the installed plugins find the shared router without any env var
-EFFORT_LANES_ROUTER="$LANES_HOME/effort_router.py" node -e "
-import('$OPENCODE_ROOT/plugins/effort-lanes.js').then(async (m) => {
-  const h = await m.EffortLanesPlugin({ directory: '$TMP_ROOT' });
+MODEL_ORCHESTRATOR_ROUTER="$LANES_HOME/model_orchestrator.py" node -e "
+import('$OPENCODE_ROOT/plugins/model-orchestrator.js').then(async (m) => {
+  const h = await m.ModelOrchestratorPlugin({ directory: '$TMP_ROOT' });
   const out = { message: { id: 'm' }, parts: [{ type: 'text', text: 'count files' }] };
   await h['chat.message']({ sessionID: 's' }, out);
   if (out.parts.length !== 2 || !/lane=FAST/.test(out.parts[1].text)) { console.error(out); process.exit(1); }
@@ -82,8 +82,8 @@ for skill in aim-before-build harness-audit; do
 done
 [[ -f "$CLAUDE_ROOT/skills/harness-audit/scripts/audit.py" ]]   # whole skill tree, not only SKILL.md
 [[ ! -d "$OPENCODE_ROOT/skills" ]]                                 # OpenCode reads ~/.claude/skills
-grep -qx 'previous codex skill' "$CODEX_ROOT/skills/aim-before-build/SKILL.md.effort-router.bak"
-grep -qx 'previous claude skill' "$CLAUDE_ROOT/skills/aim-before-build/SKILL.md.effort-router.bak"
+grep -qx 'previous codex skill' "$CODEX_ROOT/skills/aim-before-build/SKILL.md.model-orchestrator.bak"
+grep -qx 'previous claude skill' "$CLAUDE_ROOT/skills/aim-before-build/SKILL.md.model-orchestrator.bak"
 [[ ! -e "$CODEX_ROOT/skills/phase-loop/SKILL.md" ]]
 
 run_install --starter
@@ -116,7 +116,7 @@ if run_install --runtimes cursor 2>/dev/null; then echo "Expected an unknown run
 BROKEN_ROOT="$TMP_ROOT/broken"
 mkdir -p "$BROKEN_ROOT/codex"
 printf '{broken' > "$BROKEN_ROOT/codex/hooks.json"
-if EFFORT_LANES_HOME="$BROKEN_ROOT/lanes" EFFORT_LANES_CODEX_HOME="$BROKEN_ROOT/codex" EFFORT_LANES_CLAUDE_HOME="$BROKEN_ROOT/claude" \
+if MODEL_ORCHESTRATOR_HOME="$BROKEN_ROOT/lanes" MODEL_ORCHESTRATOR_CODEX_HOME="$BROKEN_ROOT/codex" MODEL_ORCHESTRATOR_CLAUDE_HOME="$BROKEN_ROOT/claude" \
    bash "$ROOT/install.sh" --runtimes codex,claude --starter >/dev/null 2>&1; then
   echo "Expected malformed settings to fail" >&2; exit 1
 fi
@@ -125,14 +125,14 @@ fi
 HALF_ROOT="$TMP_ROOT/half"
 mkdir -p "$HALF_ROOT/codex"
 printf 'not-a-directory\n' > "$HALF_ROOT/claude"
-if EFFORT_LANES_HOME="$HALF_ROOT/lanes" EFFORT_LANES_CODEX_HOME="$HALF_ROOT/codex" EFFORT_LANES_CLAUDE_HOME="$HALF_ROOT/claude" \
+if MODEL_ORCHESTRATOR_HOME="$HALF_ROOT/lanes" MODEL_ORCHESTRATOR_CODEX_HOME="$HALF_ROOT/codex" MODEL_ORCHESTRATOR_CLAUDE_HOME="$HALF_ROOT/claude" \
    bash "$ROOT/install.sh" --runtimes codex,claude --starter >/dev/null 2>&1; then
   echo "Expected a non-directory runtime home to fail" >&2; exit 1
 fi
 [[ -z "$(find "$HALF_ROOT/codex" -mindepth 1 -print -quit)" ]]
 
 SPACE_ROOT="$TMP_ROOT/path with spaces"
-EFFORT_LANES_HOME="$SPACE_ROOT/lanes" EFFORT_LANES_CODEX_HOME="$SPACE_ROOT/codex home" EFFORT_LANES_CLAUDE_HOME="$SPACE_ROOT/claude home" \
+MODEL_ORCHESTRATOR_HOME="$SPACE_ROOT/lanes" MODEL_ORCHESTRATOR_CODEX_HOME="$SPACE_ROOT/codex home" MODEL_ORCHESTRATOR_CLAUDE_HOME="$SPACE_ROOT/claude home" \
   bash "$ROOT/install.sh" --runtimes codex,claude --skills morning-brief >/dev/null
 [[ -f "$SPACE_ROOT/codex home/skills/morning-brief/SKILL.md" ]]
 [[ -f "$SPACE_ROOT/claude home/skills/morning-brief/SKILL.md" ]]
@@ -160,7 +160,7 @@ NO_NODE_BIN="$TMP_ROOT/no-node-bin"
 mkdir -p "$NO_NODE_BIN"
 ln -s "$(command -v dirname)" "$NO_NODE_BIN/dirname"
 ln -s "$(command -v python3)" "$NO_NODE_BIN/python3"
-if PATH="$NO_NODE_BIN" EFFORT_LANES_HOME="$NO_NODE_ROOT/lanes" EFFORT_LANES_OPENCODE_HOME="$NO_NODE_ROOT/opencode" \
+if PATH="$NO_NODE_BIN" MODEL_ORCHESTRATOR_HOME="$NO_NODE_ROOT/lanes" MODEL_ORCHESTRATOR_OPENCODE_HOME="$NO_NODE_ROOT/opencode" \
    /bin/bash "$ROOT/install.sh" --runtimes opencode --dry-run > /dev/null 2> "$TMP_ROOT/no-node.err"; then
   echo "Expected missing Node to fail" >&2; exit 1
 fi
@@ -174,7 +174,7 @@ ln -s "$(command -v dirname)" "$OLD_NODE_BIN/dirname"
 ln -s "$(command -v python3)" "$OLD_NODE_BIN/python3"
 printf '#!/bin/sh\nprintf "18\\n"\n' > "$OLD_NODE_BIN/node"
 chmod +x "$OLD_NODE_BIN/node"
-if PATH="$OLD_NODE_BIN" EFFORT_LANES_HOME="$OLD_NODE_ROOT/lanes" EFFORT_LANES_OPENCLAW_HOME="$OLD_NODE_ROOT/openclaw" \
+if PATH="$OLD_NODE_BIN" MODEL_ORCHESTRATOR_HOME="$OLD_NODE_ROOT/lanes" MODEL_ORCHESTRATOR_OPENCLAW_HOME="$OLD_NODE_ROOT/openclaw" \
    /bin/bash "$ROOT/install.sh" --runtimes openclaw --dry-run > /dev/null 2> "$TMP_ROOT/old-node.err"; then
   echo "Expected Node 18 to fail" >&2; exit 1
 fi

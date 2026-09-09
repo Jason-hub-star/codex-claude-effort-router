@@ -1,7 +1,7 @@
 # Project status
 
 ## Now
-- v0.3.0 shipped 2026-09-08: five runtimes, ten skills, docs gate. Decision sheet archived under `docs/archive/`.
+- v0.3.0 shipped 2026-09-08. The next unreleased version is being renamed to Model Orchestrator across its GitHub slug, install IDs, context tag, environment variables, and config paths; its first dashboard is read-only by design.
 
 ## Next action
 - Before any production auto-switch hook, run the planned real-repository boundary test: three read questions in each of three active repositories, comparing direct Codex-parent reading with a context-free OpenCode Luna FAST scout three times. Record parent tokens, worker tokens, total cost, wall time, and answer accuracy. The actual Windows WSL 2 fresh-clone gate still waits for an explicit WSL installation decision.
@@ -28,3 +28,4 @@
 | 2026-09-08 | Token evidence moved to the README front: same-harness low cut input+cache 6.2% and cost 1.9%, but still cost 3.8% more than no router on the fast fixture. Auto compact/clear at finish was rejected: existing runtime compaction plus a persisted checkpoint is safer. A private Codex-log sample recorded 9/9 next-task completion after compact but did not grade fact retention | `bench/results/exp2-fastlane-20260908.{jsonl,md}`, `docs/evidence/CONTEXT-MANAGEMENT.md` |
 | 2026-09-09 | Actual Windows host is Windows 11 but has no WSL, Codex, OpenCode, or Gemini CLI, so no Windows install was attempted. Gemini CLI subscription auth returned `UNSUPPORTED_CLIENT`; OpenCode Zen Gemini had insufficient balance. Fallback fresh-worker routing selected Luna for Fast and Kimi for Deep/Critical across three cycles; 9/9 hidden checks passed with zero runtime error or timeout | `docs/goals/GOAL-opencode-worker-switch.md`, `bench/results/exp3-opencode-worker-switch-20260909.{jsonl,md}` |
 | 2026-09-09 | Current model audit found the configured DeepSeek V4 Flash scout still failed with unretryable region-opt-in HTTP 403. Same-task FAST A/B: Luna 15/15 and Kimi 15/15; Luna cut OpenCode Go event cost 76.8% and total wall time 48.2%. User-level `small_model`, `explore`, and `handoff` now use Luna; Kimi remains default/general/implement. A real Kimi-parent → `explore` delegation reported Luna in task metadata and both exported sessions | `docs/goals/GOAL-opencode-fast-model-ab.md`, `bench/results/exp4-fast-model-ab-20260909.md` |
+| 2026-09-09 | Approved Model Orchestrator visual direction implemented as a dependency-free read-only Routing Studio; technical namespace migration covers repository URL, install/plugin IDs, context tag, environment variables, and config paths | `dashboard/index.html`, `tests/test_dashboard.py`, `bash scripts/check.sh` |

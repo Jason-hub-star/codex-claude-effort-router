@@ -4,7 +4,7 @@
   "meta": {
     "title": "One Prompt, Right-Sized Effort",
     "subtitle": "A fail-open hook adds routing context without pretending to switch the active parent model",
-    "output": "docs/effort-routing.html",
+    "output": "docs/ref/diagrams/model-orchestration.html",
     "animation": "trace"
   },
   "lanes": [
