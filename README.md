@@ -192,9 +192,21 @@ Experiment 2 then isolated the fast effort setting: 5 tasks × 5 conditions × 3
 cost moved only -1.9%; this is one provider and not a universal model claim. See
 [experiment 2](bench/results/exp2-fastlane-20260908.md).
 
+Experiment 3 checked model selection separately: three Fast → Deep → Critical cycles launched fresh
+OpenCode workers, selecting Luna for Fast and Kimi for Deep/Critical. All 9/9 hidden checks passed.
+This proves fresh-session worker selection, not hot-swapping the running parent or saving cost. See
+[experiment 3](bench/results/exp3-opencode-worker-switch-20260909.md).
+
+Experiment 4 then compared the two usable workers on the **same** five Fast tasks, three repeats per
+model. Luna and Kimi both passed 15/15; Luna used 76.8% less OpenCode Go allowance-equivalent event
+cost and 48.2% less total wall time. The previously configured DeepSeek scout was excluded after an
+unretryable region-opt-in 403. These are OpenCode Go calls on its separate subscription allowance,
+not ChatGPT/Codex subscription usage. See [experiment 4](bench/results/exp4-fast-model-ab-20260909.md).
+
 ```bash
 python3 bench/run.py route                       # offline: does each task reach its labeled lane?
 python3 bench/run.py run --repeat 3              # 270 model runs (15 tasks × 6 conditions × 3)
+python3 bench/run.py worker-switch --out bench/results/worker-switch.jsonl
 python3 bench/run.py summarize bench/results/<file>.jsonl
 ```
 

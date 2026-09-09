@@ -1,6 +1,6 @@
 # Validation evidence
 
-Last updated: 2026-09-08 (Asia/Seoul). Local versions at the time: OpenCode 1.18.18 (plugin SDK 1.17.11), OpenClaw 2026.3.13, Hermes Agent v0.21.0 (2026.8.31), Python 3.14, Node 24.
+Last updated: 2026-09-09 (Asia/Seoul). Local versions at the time: OpenCode 1.18.18 (plugin SDK 1.17.11), OpenClaw 2026.3.13, Hermes Agent v0.21.0 (2026.8.31), Python 3.14, Node 24.
 
 ## Automated checks (`bash scripts/check.sh`)
 
@@ -68,6 +68,32 @@ output fell 11.7%, reasoning fell 49.8%, cost fell 1.9%, and median wall time fe
 router, however, `enforce-low` used 17.7% more input plus cache-read and cost 3.8% more. All sides
 passed 15/15. This is why the README exposes both comparisons instead of a reasoning-only headline.
 
+## Fresh-worker selection experiment (2026-09-09)
+
+After Gemini CLI and OpenCode Zen Gemini were unavailable through the user's existing credentials,
+the fallback used two confirmed OpenCode Go workers. The deterministic classifier selected
+`gpt-5.6-luna` for Fast and `kimi-k2.7-code` for Deep/Critical, then launched a fresh isolated session.
+The Fast → Deep → Critical sequence ran three times: 9/9 hidden checks passed, with zero event error,
+timeout, or fatal provider error. This verifies lane-selected fresh workers, not a hot parent-model
+swap or a cost advantage. Raw rows and totals are in
+`bench/results/exp3-opencode-worker-switch-20260909.{jsonl,md}`.
+
+## Same-task OpenCode FAST model A/B (2026-09-09)
+
+Five FAST tasks ran three times each in fresh plugin-free sessions on both GPT-5.6 Luna and Kimi
+K2.7 Code. Both passed 15/15. Luna's OpenCode Go event cost was $0.09738 versus Kimi's $0.42038
+(-76.8%), and total wall time was 119.8 versus 231.4 seconds (-48.2%). Reasoning tokens were 635
+versus 2,124, but cross-provider token counters are descriptive because tokenizers and cache
+accounting differ. A preflight of the previously configured DeepSeek V4 Flash scout failed with an
+unretryable region-opt-in HTTP 403, so the user-level OpenCode small/explore/handoff references were
+changed to Luna; Kimi remains the default and implementation worker. See
+`bench/results/exp4-fast-model-ab-20260909.md`.
+
+A post-change runtime smoke then used a real Kimi parent to call the `explore` subagent. OpenCode
+task metadata and both exported sessions identified the child as Luna, and parent/child both returned
+the expected `0.4.2`. The sanitized record is
+`bench/results/exp4-delegation-smoke-20260909.json`.
+
 ## Context compaction assessment (2026-09-08)
 
 No automatic finish hook was added. Claude Code already has auto/manual compact and clear boundaries.
@@ -100,5 +126,6 @@ billing reduction is claimed. Method, limits, and the compact/clear decision rul
 - That the public GitHub marketplace path contains the fixes before this branch is pushed and checked from a fresh clone. The equivalent local-source marketplace path is verified end to end without a model call.
 - That any provider changes its reasoning when OpenCode passes `reasoningEffort`; only that the call is accepted.
 - That native Git Bash, PowerShell, Command Prompt, or Windows-host path interoperability works. The supported Windows boundary is the Linux userland inside WSL 2.
+- That OpenCode can hot-swap the model used by the current provider turn; experiment 3 launched a fresh session after classification.
 
 Future measurements should record task fixture, model version, effort, wall time, token use, pass/fail rubric, and repeated trials.

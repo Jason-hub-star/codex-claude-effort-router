@@ -162,6 +162,17 @@ python3 router/effort_router.py --classify --json --runtime opencode --prompt "�
 봉인 규칙에 따라 fast 프롬프트별 기본값을 `low`로 바꿨습니다. 총비용 차이는 -1.9%였고 한
 프로바이더의 결과이므로 모든 모델로 일반화하지 않습니다 — [실험 2](bench/results/exp2-fastlane-20260908.md).
 
+실험 3은 모델 선택만 따로 확인했습니다. Fast→Deep→Critical 순서를 세 번 반복해 매번 새 OpenCode
+작업자를 띄웠고, Fast는 Luna, Deep·Critical은 Kimi가 선택됐습니다. 숨은 검사는 9/9 통과했습니다.
+이는 새 세션 작업자 선택의 증거이며 실행 중 부모 모델 교체나 비용 절감의 증거는 아닙니다 —
+[실험 3](bench/results/exp3-opencode-worker-switch-20260909.md).
+
+실험 4는 쓸 수 있는 두 작업자를 **같은** fast 과제 5개에 모델별 3회씩 비교했습니다. Luna와 Kimi
+모두 15/15 통과했고, Luna가 OpenCode Go 한도 환산 이벤트 비용을 76.8%, 총 벽시계 시간을 48.2%
+줄였습니다. 기존 DeepSeek 정찰 모델은 지역 opt-in이 필요한 HTTP 403으로 제외했습니다. 이 호출들은
+ChatGPT/Codex 구독량이 아니라 별도 OpenCode Go 구독 한도를 씁니다 —
+[실험 4](bench/results/exp4-fast-model-ab-20260909.md).
+
 ## 포지셔닝
 
 v0.2까지는 일부러 Codex+Claude 전용의 좁은 라우터였습니다. v0.3에서 훅이 실제로 강도를 바꿀 수 있는 자리를 실측한 뒤 크로스 런타임 하네스로 넓혔습니다. 비교와 배운 점은 [docs/research/COMPARISON.md](docs/research/COMPARISON.md). 유지하는 원칙: 분류기 파일 하나, 라우팅 경로에 LLM 없음, 자동 강제 없음, 주장마다 증거와 명시적 한계 연결.

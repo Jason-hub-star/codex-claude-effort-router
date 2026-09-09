@@ -4,10 +4,10 @@
 - v0.3.0 shipped 2026-09-08: five runtimes, ten skills, docs gate. Decision sheet archived under `docs/archive/`.
 
 ## Next action
-- Run the actual WSL 2 fresh-clone gate, then push and repeat the Claude marketplace install from the public GitHub source before a patch release. Experiment 2 is decided; do not rerun it to tune the same result.
+- Before any production auto-switch hook, run the planned real-repository boundary test: three read questions in each of three active repositories, comparing direct Codex-parent reading with a context-free OpenCode Luna FAST scout three times. Record parent tokens, worker tokens, total cost, wall time, and answer accuracy. The actual Windows WSL 2 fresh-clone gate still waits for an explicit WSL installation decision.
 
 ## Open decisions
-- none
+- Whether to install WSL 2 on the Windows host. Gemini subscription access currently does not transfer to Gemini CLI or the existing OpenCode Zen balance.
 
 ## Log
 | Date | Change | Evidence |
@@ -26,3 +26,5 @@
 | 2026-09-08 | Experiment 2 completed 75/75 without errors. `enforce-low` cut mean reasoning 60.3→30.3 (-49.8%) versus medium with equal 15/15 pass rate; sealed Case A changed only the fast per-prompt effort default to low | `bench/results/exp2-fastlane-20260908.{jsonl,md}` |
 | 2026-09-08 | README truth pass removed stale speed/size/demo claims, aligned the 47-case and 270-run counts, and made evidence limits explicit. A real Claude marketplace attempt found two manifest defects; standard-path auto-discovery fixed both, and an isolated local install loaded 10 skills, 4 agents, and 1 hook as enabled. Node 22 is now enforced before installer writes | `README.md`, `README.ko.md`, `.claude-plugin/plugin.json`, `tests/test_installer.sh`, `docs/evidence/VALIDATION.md` |
 | 2026-09-08 | Token evidence moved to the README front: same-harness low cut input+cache 6.2% and cost 1.9%, but still cost 3.8% more than no router on the fast fixture. Auto compact/clear at finish was rejected: existing runtime compaction plus a persisted checkpoint is safer. A private Codex-log sample recorded 9/9 next-task completion after compact but did not grade fact retention | `bench/results/exp2-fastlane-20260908.{jsonl,md}`, `docs/evidence/CONTEXT-MANAGEMENT.md` |
+| 2026-09-09 | Actual Windows host is Windows 11 but has no WSL, Codex, OpenCode, or Gemini CLI, so no Windows install was attempted. Gemini CLI subscription auth returned `UNSUPPORTED_CLIENT`; OpenCode Zen Gemini had insufficient balance. Fallback fresh-worker routing selected Luna for Fast and Kimi for Deep/Critical across three cycles; 9/9 hidden checks passed with zero runtime error or timeout | `docs/goals/GOAL-opencode-worker-switch.md`, `bench/results/exp3-opencode-worker-switch-20260909.{jsonl,md}` |
+| 2026-09-09 | Current model audit found the configured DeepSeek V4 Flash scout still failed with unretryable region-opt-in HTTP 403. Same-task FAST A/B: Luna 15/15 and Kimi 15/15; Luna cut OpenCode Go event cost 76.8% and total wall time 48.2%. User-level `small_model`, `explore`, and `handoff` now use Luna; Kimi remains default/general/implement. A real Kimi-parent → `explore` delegation reported Luna in task metadata and both exported sessions | `docs/goals/GOAL-opencode-fast-model-ab.md`, `bench/results/exp4-fast-model-ab-20260909.md` |

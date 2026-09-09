@@ -1,0 +1,15 @@
+{
+  "date": "2026-09-09",
+  "opencode_version": "1.18.18",
+  "parent": {
+    "model": "opencode-go/kimi-k2.7-code",
+    "result": "0.4.2"
+  },
+  "delegation": {
+    "agent": "explore",
+    "model": "opencode-go/gpt-5.6-luna",
+    "result": "0.4.2",
+    "completed": true
+  },
+  "verification": "OpenCode task metadata and both exported sessions reported the expected models."
+}

@@ -174,6 +174,19 @@ class BenchTests(unittest.TestCase):
         data = json.loads(RUN.config_content("opencode-go/gpt-5.6-luna", "high"))
         self.assertEqual(data["provider"]["opencode-go"]["models"]["gpt-5.6-luna"]["options"]["reasoningEffort"], "high")
 
+    def test_worker_switch_uses_the_classifier_and_covers_every_lane(self):
+        self.assertEqual(set(RUN.WORKER_MODELS), set(RUN.LANES))
+        cases = {
+            "What is the version in pyproject.toml? Reply with the version only.":
+                ("fast", "opencode-go/gpt-5.6-luna"),
+            "Implement the parser, add a test, and run it.":
+                ("deep", "opencode-go/kimi-k2.7-code"),
+            "Security fix: remove the hardcoded secret and add a test.":
+                ("critical", "opencode-go/kimi-k2.7-code"),
+        }
+        for prompt, expected in cases.items():
+            self.assertEqual(RUN.select_worker({"prompt": prompt}), expected)
+
     def test_published_exp2_headline_matches_raw_rows(self):
         path = ROOT / "bench" / "results" / "exp2-fastlane-20260908.jsonl"
         rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]

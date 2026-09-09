@@ -14,6 +14,7 @@ Same tasks, same model, one axis changed: how the prompt's effort is chosen. Num
 python3 bench/run.py run --tasks F2 --conditions none,enforce          # smoke
 python3 bench/run.py run --tasks F1,F2,F3,F4,F5 --conditions none,always-low,advisory,enforce,enforce-low --repeat 3  # exp2: 75 runs
 python3 bench/run.py run --repeat 3                                    # all current conditions: 15 × 6 × 3 = 270 runs
+python3 bench/run.py worker-switch --out bench/results/worker-switch.jsonl  # fresh worker chosen by lane
 python3 bench/run.py summarize bench/results/<file>.jsonl
 ```
 
@@ -37,6 +38,22 @@ then-current `enforce=medium`, with equal 15/15 pass rates. Case A changed the p
 per-prompt default to `low`; Codex and Claude profile targets remain medium because this experiment
 covered one OpenCode provider. `enforce-low` remains in the runner as the historical experiment
 condition and is now equivalent to the product default. See `results/exp2-fastlane-20260908.md`.
+
+## Experiment 3 result — fresh-worker selection
+
+The sealed worker-switch smoke ran Fast, Deep, and Critical tasks three times each. The classifier
+selected Luna for all three Fast runs and Kimi for all six Deep/Critical runs; all 9/9 hidden checks
+passed with no provider error or timeout. This proves selection across fresh sessions, not hot-swapping
+a running parent, and it is not a same-task model-performance A/B. See
+`results/exp3-opencode-worker-switch-20260909.md`.
+
+## Experiment 4 result — same-task FAST model A/B
+
+Five FAST tasks ran three times each on both usable configured workers. Luna and Kimi both passed
+15/15; Luna used 76.8% less OpenCode Go allowance-equivalent event cost and 48.2% less total wall
+time. The configured DeepSeek scout was excluded after an unretryable region-opt-in 403. Token
+totals are descriptive because provider tokenizers and cache accounting differ. See
+`results/exp4-fast-model-ab-20260909.md`.
 
 ## What this does not measure
 

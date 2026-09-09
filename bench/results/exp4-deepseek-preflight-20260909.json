@@ -1,0 +1,11 @@
+{
+  "date": "2026-09-09",
+  "opencode_version": "1.18.18",
+  "model": "opencode-go/deepseek-v4-flash",
+  "status": "failed",
+  "http_status": 403,
+  "retryable": false,
+  "error_type": "RegionError",
+  "message": "The latest model requires explicit opt-in to China hosting.",
+  "decision": "Exclude from the A/B and do not leave it as the configured small or scout model."
+}

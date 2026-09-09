@@ -46,6 +46,15 @@ CONDITIONS = {
                     "lane_config": {"lanes": {"fast": {"effort": "low"}}}},
 }
 
+# Sealed experiment 3 map: select a fresh OpenCode worker after classification.
+# This does not hot-swap a running parent session.
+WORKER_MODELS = {
+    "fast": "opencode-go/gpt-5.6-luna",
+    "daily": "opencode-go/gpt-5.6-luna",
+    "deep": "opencode-go/kimi-k2.7-code",
+    "critical": "opencode-go/kimi-k2.7-code",
+}
+
 
 def config_content(model: str, effort: str) -> str:
     provider, model_id = model.split("/", 1)
@@ -233,6 +242,45 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def select_worker(task: dict) -> tuple[str, str]:
+    """Return the classifier's lane and the sealed fresh-worker model for a task."""
+    env = {**os.environ, "EFFORT_LANES_CONFIG": str(HERE / "results" / ".no-global-config.json")}
+    result = subprocess.run(
+        [sys.executable, str(HERE.parent / "router" / "effort_router.py"), "--classify", "--json",
+         "--runtime", "opencode", "--prompt", task["prompt"], "--cwd", str(HERE / "fixtures" / "todo")],
+        capture_output=True, text=True, env=env, check=True,
+    )
+    lane = json.loads(result.stdout)["lane"]
+    return lane, WORKER_MODELS[lane]
+
+
+def cmd_worker_switch(args: argparse.Namespace) -> int:
+    """Experiment 3: classify, then launch a fresh worker using the lane's model."""
+    wanted = set(args.tasks.split(","))
+    tasks = [task for task in json.loads((HERE / "tasks.json").read_text()) if task["id"] in wanted]
+    if len(tasks) != len(wanted):
+        print("unknown task in --tasks", file=sys.stderr)
+        return 1
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    with out.open("x") as fh:
+        for rep in range(args.repeat):
+            for task in tasks:
+                lane, model = select_worker(task)
+                row = run_one(task, "none", model, args.timeout)
+                row.update({"lane_routed": lane, "selection": "fresh-worker", "repeat": rep})
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+                fh.flush()
+                rows.append(row)
+                print(f"[{len(rows)}/{len(tasks) * args.repeat}] {task['id']} lane={lane} model={model} "
+                      f"pass={row['pass']} cost={row['cost']} wall={row['wall_s']}s", flush=True)
+                if row["fatal"]:
+                    print(f"ABORT: {row['fatal']}", file=sys.stderr)
+                    return 2
+    return 0 if rows and all(row["pass"] for row in rows) else 1
+
+
 def mean(values: list[float]) -> float:
     return round(statistics.mean(values), 1) if values else 0.0
 
@@ -391,6 +439,12 @@ def main() -> int:
     run.add_argument("--timeout", type=int, default=600)
     run.add_argument("--out", default="")
     run.set_defaults(func=cmd_run)
+    switch = sub.add_parser("worker-switch", help="classify tasks and launch a fresh lane-selected OpenCode worker")
+    switch.add_argument("--tasks", default="F2,D1,C1")
+    switch.add_argument("--repeat", type=int, default=3)
+    switch.add_argument("--timeout", type=int, default=600)
+    switch.add_argument("--out", required=True)
+    switch.set_defaults(func=cmd_worker_switch)
     route = sub.add_parser("route", help="offline routing agreement for tasks.json")
     route.set_defaults(func=cmd_route)
     dec = sub.add_parser("decide", help="apply the sealed fast-lane decision rule to a results file")
