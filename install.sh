@@ -198,7 +198,7 @@ install_tree() {
 }
 
 merge_hook() {
-  local settings="$1" command="$2" platform="$3" handler temp
+  local settings="$1" command="$2" platform="$3" handler legacy_command temp
   mkdir -p "$(dirname "$settings")"
   [[ -e "$settings" ]] || printf '{"hooks":{}}\n' > "$settings"
   jq -e . "$settings" >/dev/null
@@ -208,13 +208,14 @@ merge_hook() {
   else
     handler="$(jq -nc --arg command "$command" '{type:"command",command:$command,timeout:2,statusMessage:"Routing task effort"}')"
   fi
+  legacy_command="${command/model-orchestrator.py/effort-router.py}"
   temp="$(mktemp "$(dirname "$settings")/.model-orchestrator.XXXXXX")"
-  jq --arg command "$command" --argjson handler "$handler" '
+  jq --arg command "$command" --arg legacy "$legacy_command" --argjson handler "$handler" '
     .hooks = (.hooks // {})
     | .hooks.UserPromptSubmit = (.hooks.UserPromptSubmit // [])
     | .hooks.UserPromptSubmit = [
         .hooks.UserPromptSubmit[]?
-        | .hooks = [ .hooks[]? | select(.command != $command) ]
+        | .hooks = [ .hooks[]? | select(.command != $command and .command != $legacy) ]
         | select((.hooks | length) > 0)
       ]
     | .hooks.UserPromptSubmit += [{"hooks": [$handler]}]

@@ -14,8 +14,10 @@ mkdir -p "$CODEX_ROOT" "$CLAUDE_ROOT"
 ALL="codex,claude,opencode,openclaw,hermes"
 
 router_command="python3 \"$CODEX_ROOT/hooks/model-orchestrator.py\""
-jq -nc --arg command "$router_command" '{hooks:{UserPromptSubmit:[{hooks:[{type:"command",command:"keep-me",timeout:9},{type:"wrong",command:$command,timeout:99}]}]}}' > "$CODEX_ROOT/hooks.json"
-printf '{"hooks":{}}\n' > "$CLAUDE_ROOT/settings.json"
+legacy_codex_command="python3 \"$CODEX_ROOT/hooks/effort-router.py\""
+legacy_claude_command="python3 \"$CLAUDE_ROOT/hooks/effort-router.py\""
+jq -nc --arg command "$router_command" --arg legacy "$legacy_codex_command" '{hooks:{UserPromptSubmit:[{hooks:[{type:"command",command:"keep-me",timeout:9},{type:"wrong",command:$command,timeout:99},{type:"command",command:$legacy,timeout:2}]}]}}' > "$CODEX_ROOT/hooks.json"
+jq -nc --arg legacy "$legacy_claude_command" '{hooks:{UserPromptSubmit:[{hooks:[{type:"command",command:$legacy,timeout:2}]}]}}' > "$CLAUDE_ROOT/settings.json"
 
 with_homes() {
   MODEL_ORCHESTRATOR_HOME="$LANES_HOME" MODEL_ORCHESTRATOR_CODEX_HOME="$CODEX_ROOT" MODEL_ORCHESTRATOR_CLAUDE_HOME="$CLAUDE_ROOT" \
@@ -46,10 +48,12 @@ second_hash="$(shasum -a 256 "$CODEX_ROOT/hooks.json" "$CLAUDE_ROOT/settings.jso
 jq -e --arg command "$router_command" '
   ([.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2 and .additionalContextLimit == 1200)] | length == 1)
   and any(.hooks.UserPromptSubmit[]?.hooks[]?; .command == "keep-me")
+  and all(.hooks.UserPromptSubmit[]?.hooks[]?; (.command | contains("effort-router.py") | not))
 ' "$CODEX_ROOT/hooks.json" >/dev/null
 claude_command="python3 \"$CLAUDE_ROOT/hooks/model-orchestrator.py\""
 jq -e --arg command "$claude_command" '
-  [.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2)] | length == 1
+  ([.hooks.UserPromptSubmit[]?.hooks[]? | select(.command == $command and .type == "command" and .timeout == 2)] | length == 1)
+  and all(.hooks.UserPromptSubmit[]?.hooks[]?; (.command | contains("effort-router.py") | not))
 ' "$CLAUDE_ROOT/settings.json" >/dev/null
 [[ -f "$CODEX_ROOT/hooks.json.model-orchestrator.bak" ]]
 [[ -f "$CLAUDE_ROOT/settings.json.model-orchestrator.bak" ]]
